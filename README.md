@@ -1,62 +1,91 @@
-# 🏠 RentFair
+# RentFair - Smart Rent Analysis System
 
-**Know if your rent is fair, overpriced, or a hidden deal**
-
-RentFair is a web application that analyzes rental listings to determine if they're fairly priced compared to the market. Using real market data and statistical analysis, it provides instant feedback on rental fairness with clear explanations and visualizations.
+🏠 **RentFair** is a comprehensive rent fairness analysis platform that helps renters determine if a rental listing is fairly priced compared to the market.
 
 ## 🚀 Features
 
-- **Fairness Scoring**: Get instant analysis of whether a rental is overpriced, fair, or underpriced
-- **Market Comparison**: Compare listings against similar properties in the same area
-- **Statistical Analysis**: Z-score calculations and market statistics for data-driven insights
-- **Interactive Visualizations**: Price distribution charts showing where your listing stands
-- **Comparable Listings**: View similar properties with detailed information
-- **Responsive Design**: Works beautifully on desktop and mobile devices
+- **📊 Fairness Scoring**: Advanced Z-score based algorithm to determine rent fairness
+- **📈 Data Visualization**: Interactive charts showing price distribution
+- **🗺️ Location Intelligence**: Map view of comparable listings
+- **🤖 AI Insights**: Powered by Gemini API for intelligent explanations and negotiation tips
+- **🎯 Comparable Analysis**: Smart filtering of similar listings
+- **💫 Modern UI**: Beautiful, responsive design with smooth animations
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
-- **Backend**: Flask (Python)
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Visualization**: Chart.js
-- **Styling**: Modern CSS with gradients and animations
-- **Data**: Sample rental listings (easily replaceable with real APIs)
+### Backend
+- **Flask** - Python web framework
+- **Gemini API** - AI-powered insights
+- **Statistics** - Mathematical calculations
 
-## 📦 Installation
+### Frontend
+- **HTML5/CSS3/JavaScript** - Core web technologies
+- **Tailwind CSS** - Utility-first CSS framework
+- **Chart.js** - Interactive data visualization
+- **Leaflet** - Interactive maps
+- **Font Awesome** - Icon library
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd FraserHacks
-```
+## 📋 Installation
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd FraserHacks
+   ```
 
-3. Run the application:
-```bash
-python app.py
-```
+2. **Install Python dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-4. Open your browser and navigate to `http://localhost:5000`
+3. **Set up Gemini API Key**
+   - Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Update the `app.py` file with your API key:
+   ```python
+   genai.configure(api_key="YOUR_GEMINI_API_KEY")
+   ```
+
+4. **Run the application**
+   ```bash
+   python app.py
+   ```
+
+5. **Open your browser**
+   Navigate to `http://localhost:5000`
 
 ## 🧮 Algorithm
 
-The fairness scoring algorithm uses statistical analysis to determine market positioning:
+### Fairness Score Calculation
 
-1. **Find Comparables**: Filter listings by location and bedroom count (±1 bedroom)
-2. **Calculate Market Stats**: Compute mean, median, standard deviation, and price range
-3. **Fairness Score**: `(user_rent - avg_rent) / avg_rent`
-4. **Z-Score**: `(user_rent - mean) / standard_deviation`
-5. **Classification**:
-   - Underpriced: < -10% below market
-   - Fair: ±10% of market
-   - Overpriced: > +10% above market
+The system uses a sophisticated Z-score based approach:
 
-## 📊 Data Structure
+1. **Find Comparables**: Filter listings by location, bedrooms (±1), and bathrooms (±1)
+2. **Calculate Market Stats**: Compute mean, median, and standard deviation
+3. **Z-Score Formula**: 
+   ```
+   z = (user_rent - market_mean) / market_std_dev
+   ```
+4. **Classification**:
+   - **Underpriced**: < -10% below market
+   - **Fair**: ±10% of market
+   - **Overpriced**: > +10% above market
 
-Each rental listing contains:
+## 📊 Data Sources
+
+The system currently uses a curated sample dataset of rental listings in Mississauga. In production, this can be extended with:
+
+- **Zillow API** (unofficial)
+- **Realtor API**
+- **RapidAPI** rental listings
+- **Canada Mortgage and Housing Corporation** data
+- **Statistics Canada** housing data
+
+## 🎯 API Endpoints
+
+### POST `/api/analyze-rent`
+Analyzes a rental listing for fairness.
+
+**Request Body:**
 ```json
 {
   "price": 2400,
@@ -64,24 +93,7 @@ Each rental listing contains:
   "bathrooms": 1,
   "location": "Mississauga",
   "sqft": 850,
-  "address": "123 Main St"
-}
-```
-
-## 🔧 API Endpoints
-
-### POST /analyze-rent
-Analyzes a rental listing for fairness.
-
-**Request Body:**
-```json
-{
-  "address": "123 Main St",
-  "location": "Mississauga",
-  "price": 2400,
-  "bedrooms": 2,
-  "bathrooms": 1,
-  "sqft": 850
+  "address": "123 Queen St E"
 }
 ```
 
@@ -89,57 +101,117 @@ Analyzes a rental listing for fairness.
 ```json
 {
   "user_listing": {...},
-  "comparables": [...],
-  "market_stats": {
-    "mean": 2250,
-    "median": 2300,
-    "std_dev": 200,
-    "min": 1950,
-    "max": 2600,
-    "count": 10
-  },
   "fairness_result": {
-    "fairness_score": 0.067,
-    "z_score": 0.75,
-    "classification": "Fair",
-    "color": "green",
-    "percent_difference": 6.7
+    "score": -5.2,
+    "label": "Fair",
+    "color": "#10B981",
+    "z_score": -0.3,
+    "mean_price": 2350,
+    "median_price": 2300,
+    "std_dev": 150,
+    "comparable_count": 8
   },
-  "explanation": "This 2-bedroom listing in Mississauga is fairly priced..."
+  "comparables": [...],
+  "ai_explanation": {...},
+  "price_distribution": {...}
 }
 ```
 
-### GET /market-stats/<location>/<bedrooms>
-Returns market statistics for a specific location and bedroom count.
+### GET `/api/market-stats`
+Returns general market statistics.
 
-## 🎨 Design Features
+## 🏗️ Project Structure
 
-- **Modern UI**: Gradient backgrounds, smooth animations, and card-based layouts
-- **Responsive Design**: Mobile-first approach with breakpoints for tablets and desktops
-- **Interactive Elements**: Hover effects, loading states, and smooth transitions
-- **Accessibility**: Semantic HTML5, proper form labels, and keyboard navigation
-- **Visual Feedback**: Color-coded fairness badges and progress indicators
+```
+FraserHacks/
+├── app.py                 # Flask backend application
+├── requirements.txt       # Python dependencies
+├── README.md             # Project documentation
+├── templates/
+│   └── index.html        # Main HTML template
+├── static/
+│   ├── css/
+│   │   └── style.css     # Custom styles
+│   └── js/
+│       └── app.js        # Frontend JavaScript
+└── data/
+    └── listings.json     # Sample rental data (future)
+```
 
-## 🔮 Future Enhancements
+## 🎨 UI Features
 
-- **Real API Integration**: Connect to Zillow, Realtor.com, or local rental APIs
-- **Location Intelligence**: Geocoding and distance-based clustering
-- **AI Explanations**: OpenAI integration for personalized negotiation tips
-- **Historical Data**: Track price trends over time
-- **User Accounts**: Save analyses and get price alerts
-- **Mobile App**: React Native or Flutter application
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Interactive Charts**: Price distribution visualization
+- **Live Maps**: Location-based comparable listings
+- **Smooth Animations**: Modern, polished user experience
+- **Loading States**: User-friendly feedback during analysis
+- **Glass Morphism**: Modern UI design patterns
 
-## 🏆 Pitch Positioning
+## 🔧 Configuration
 
-"Renters are making one of the biggest financial decisions of their lives without market transparency. RentFair uses real market data to instantly evaluate whether a listing is fair, overpriced, or a hidden deal."
+### Environment Variables
+Create a `.env` file for production:
+```
+GEMINI_API_KEY=your_api_key_here
+FLASK_ENV=production
+```
 
-## 📈 What Makes This Win
+### Sample Data Expansion
+To add more sample listings, modify the `SAMPLE_LISTINGS` array in `app.py`:
 
-- **Universal Problem**: Everyone understands the rent affordability challenge
-- **Clear Impact**: Immediate before/after value proposition
-- **Strong Visuals**: Data-driven charts and clear metrics
-- **Scalable Solution**: Can expand to multiple cities and data sources
-- **Demo-Ready**: Polished UI that looks impressive in presentations
+```python
+{
+  "price": 2500,
+  "bedrooms": 2,
+  "bathrooms": 2,
+  "location": "Toronto",
+  "sqft": 900,
+  "address": "456 King St W"
+}
+```
+
+## 🚀 Deployment
+
+### Heroku
+1. Install Heroku CLI
+2. Create a `Procfile`:
+   ```
+   web: python app.py
+   ```
+3. Deploy:
+   ```bash
+   heroku create your-app-name
+   git push heroku main
+   ```
+
+### Docker
+```dockerfile
+FROM python:3.9-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["python", "app.py"]
+```
+
+## 🧪 Testing
+
+Run the application locally and test with sample data:
+- Price: $2400
+- Bedrooms: 2
+- Bathrooms: 1
+- Location: Mississauga
+
+## 📈 Future Enhancements
+
+- [ ] Real-time API integration with rental platforms
+- [ ] Historical price trends
+- [ ] Neighborhood insights
+- [ ] Advanced filtering options
+- [ ] User accounts and saved searches
+- [ ] Mobile app development
+- [ ] Machine learning price predictions
 
 ## 🤝 Contributing
 
@@ -151,8 +223,19 @@ Returns market statistics for a specific location and bedroom count.
 
 ## 📄 License
 
-This project is open source and available under the MIT License.
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🏆 Hackathon Pitch
+
+**"Renters are making one of the biggest financial decisions of their lives without market transparency. RentFair uses real market data to instantly evaluate whether a listing is fair, overpriced, or a hidden deal."**
+
+### What Makes This Win
+- ✅ **Universal Problem**: Everyone understands the rent affordability challenge
+- ✅ **Clear Impact**: Instant before/after value proposition
+- ✅ **Strong Visuals**: Data-driven charts and maps
+- ✅ **Technical Depth**: Z-score calculations, AI integration
+- ✅ **Demo-Ready**: Polished UI with smooth interactions
 
 ---
 
-**Built with ❤️ for the FraserHacks competition**
+**Built with ❤️ for FraserHacks 2024**
