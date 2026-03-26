@@ -728,6 +728,8 @@ def calculate_fairness_score(user_rent, comparables):
         "mean_price": mean_price,
         "median_price": median_price,
         "std_dev": std_dev,
+        "min_price": min(prices),
+        "max_price": max(prices),
         "comparable_count": len(comparables)
     }
 

@@ -89,6 +89,7 @@ function initializeAdvancedCharts() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                resizeDelay: 100,
                 plugins: {
                     legend: {
                         display: false
@@ -106,19 +107,42 @@ function initializeAdvancedCharts() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Number of Listings'
+                            text: 'Number of Listings',
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 12,
+                                weight: 'bold'
+                            }
                         },
                         grid: {
                             color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 11
+                            },
+                            stepSize: 1
                         }
                     },
                     x: {
                         title: {
                             display: true,
-                            text: 'Price Range'
+                            text: 'Price Range',
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 12,
+                                weight: 'bold'
+                            }
                         },
                         grid: {
                             display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 768 ? 9 : 11
+                            },
+                            maxRotation: window.innerWidth < 768 ? 45 : 0,
+                            minRotation: window.innerWidth < 768 ? 45 : 0,
+                            autoSkip: true,
+                            maxTicksLimit: window.innerWidth < 768 ? 6 : 10
                         }
                     }
                 }
@@ -139,12 +163,15 @@ function initializeAdvancedCharts() {
                     borderColor: '#6cbd93',
                     backgroundColor: 'rgba(108, 189, 147, 0.1)',
                     tension: 0.4,
-                    fill: true
+                    fill: true,
+                    pointRadius: window.innerWidth < 768 ? 3 : 5,
+                    pointHoverRadius: window.innerWidth < 768 ? 5 : 7
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                resizeDelay: 100,
                 plugins: {
                     legend: {
                         display: false
@@ -155,16 +182,54 @@ function initializeAdvancedCharts() {
                         beginAtZero: false,
                         grid: {
                             color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 11
+                            },
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
                         }
                     },
                     x: {
                         grid: {
                             display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 11
+                            },
+                            autoSkip: false,
+                            maxRotation: 0
                         }
                     }
                 }
             }
         });
+    }
+    
+    // Add resize listener for charts
+    window.addEventListener('resize', handleChartResize);
+}
+
+function handleChartResize() {
+    if (priceChart) {
+        priceChart.options.scales.y.title.font.size = window.innerWidth < 768 ? 10 : 12;
+        priceChart.options.scales.x.title.font.size = window.innerWidth < 768 ? 10 : 12;
+        priceChart.options.scales.y.ticks.font.size = window.innerWidth < 768 ? 10 : 11;
+        priceChart.options.scales.x.ticks.font.size = window.innerWidth < 768 ? 9 : 11;
+        priceChart.options.scales.x.ticks.maxRotation = window.innerWidth < 768 ? 45 : 0;
+        priceChart.options.scales.x.ticks.minRotation = window.innerWidth < 768 ? 45 : 0;
+        priceChart.resize();
+    }
+    
+    if (trendsChart) {
+        trendsChart.options.scales.y.ticks.font.size = window.innerWidth < 768 ? 10 : 11;
+        trendsChart.options.scales.x.ticks.font.size = window.innerWidth < 768 ? 10 : 11;
+        trendsChart.data.datasets[0].pointRadius = window.innerWidth < 768 ? 3 : 5;
+        trendsChart.data.datasets[0].pointHoverRadius = window.innerWidth < 768 ? 5 : 7;
+        trendsChart.resize();
     }
 }
 
@@ -614,6 +679,23 @@ function updateStatistics(user_listing, fairness_result) {
     
     document.getElementById('comparableCount').textContent = fairness_result.comparable_count;
     
+    // Update median price
+    if (fairness_result.median_price) {
+        document.getElementById('medianPrice').textContent = `$${fairness_result.median_price.toFixed(0)}`;
+    }
+    
+    // Calculate and update price range
+    if (fairness_result.min_price && fairness_result.max_price) {
+        const rangeText = `$${fairness_result.min_price.toFixed(0)} - $${fairness_result.max_price.toFixed(0)}`;
+        document.getElementById('priceRange').textContent = rangeText;
+    } else if (fairness_result.std_dev && fairness_result.mean_price) {
+        // Fallback: calculate range using standard deviation
+        const minEst = Math.max(0, fairness_result.mean_price - (2 * fairness_result.std_dev));
+        const maxEst = fairness_result.mean_price + (2 * fairness_result.std_dev);
+        const rangeText = `$${minEst.toFixed(0)} - $${maxEst.toFixed(0)}`;
+        document.getElementById('priceRange').textContent = rangeText;
+    }
+    
     // Update average price per sqft
     if (user_listing.sqft > 0) {
         const avgPricePerSqft = fairness_result.mean_price / user_listing.sqft;
@@ -644,13 +726,18 @@ function createPriceChart(price_distribution, userPrice) {
     for (let i = 0; i < 10; i++) {
         const binMin = minPrice + (i * binWidth);
         const binMax = binMin + binWidth;
-        labels.push(`$${binMin.toFixed(0)}-$${binMax.toFixed(0)}`);
+        // Adaptive label formatting based on screen size
+        if (window.innerWidth < 768) {
+            labels.push(`$${(binMin/1000).toFixed(1)}k`);
+        } else {
+            labels.push(`$${binMin.toFixed(0)}-${binMax.toFixed(0)}`);
+        }
         
         const count = prices.filter(price => price >= binMin && price < binMax).length;
         bins.push(count);
     }
     
-    // Find which bin the user price falls into
+    // Find which bin user price falls into
     const userBinIndex = Math.min(Math.floor((userPrice - minPrice) / binWidth), 9);
     const backgroundColors = bins.map((_, index) => 
         index === userBinIndex ? '#6cbd93' : 'rgba(108, 189, 147, 0.3)'
@@ -672,6 +759,7 @@ function createPriceChart(price_distribution, userPrice) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            resizeDelay: 100,
             plugins: {
                 legend: {
                     display: false
@@ -682,19 +770,42 @@ function createPriceChart(price_distribution, userPrice) {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Number of Listings'
+                        text: 'Number of Listings',
+                        font: {
+                            size: window.innerWidth < 768 ? 10 : 12,
+                            weight: 'bold'
+                        }
                     },
                     grid: {
                         color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        font: {
+                            size: window.innerWidth < 768 ? 10 : 11
+                        },
+                        stepSize: 1
                     }
                 },
                 x: {
                     title: {
                         display: true,
-                        text: 'Price Range'
+                        text: 'Price Range',
+                        font: {
+                            size: window.innerWidth < 768 ? 10 : 12,
+                            weight: 'bold'
+                        }
                     },
                     grid: {
                         display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: window.innerWidth < 768 ? 9 : 11
+                        },
+                        maxRotation: window.innerWidth < 768 ? 45 : 0,
+                        minRotation: window.innerWidth < 768 ? 45 : 0,
+                        autoSkip: true,
+                        maxTicksLimit: window.innerWidth < 768 ? 6 : 10
                     }
                 }
             }
@@ -714,7 +825,12 @@ function updateTrendsChart(comparables) {
         trendData.push(avgPrice + variation);
     }
     
+    // Update chart with responsive options
     trendsChart.data.datasets[0].data = trendData;
+    trendsChart.data.datasets[0].pointRadius = window.innerWidth < 768 ? 3 : 5;
+    trendsChart.data.datasets[0].pointHoverRadius = window.innerWidth < 768 ? 5 : 7;
+    trendsChart.options.scales.y.ticks.font.size = window.innerWidth < 768 ? 10 : 11;
+    trendsChart.options.scales.x.ticks.font.size = window.innerWidth < 768 ? 10 : 11;
     trendsChart.update('active');
 }
 
@@ -735,12 +851,21 @@ function updateTimeRange(range) {
     for (let i = 0; i < months; i++) {
         const month = new Date();
         month.setMonth(month.getMonth() - (months - i - 1));
-        labels.push(month.toLocaleString('default', { month: 'short' }));
+        // Adaptive label format based on screen size
+        if (window.innerWidth < 768) {
+            labels.push(month.toLocaleString('default', { month: 'short' }));
+        } else {
+            labels.push(month.toLocaleString('default', { month: 'short', year: '2-digit' }));
+        }
         data.push(2200 + Math.random() * 500);
     }
     
     trendsChart.data.labels = labels;
     trendsChart.data.datasets[0].data = data;
+    trendsChart.data.datasets[0].pointRadius = window.innerWidth < 768 ? 3 : 5;
+    trendsChart.data.datasets[0].pointHoverRadius = window.innerWidth < 768 ? 5 : 7;
+    trendsChart.options.scales.y.ticks.font.size = window.innerWidth < 768 ? 10 : 11;
+    trendsChart.options.scales.x.ticks.font.size = window.innerWidth < 768 ? 10 : 11;
     trendsChart.update('active');
 }
 
