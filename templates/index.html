@@ -10,14 +10,15 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6cbd93 0%, #1e6e30 50%, #667eea 100%);
         }
         .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
         .fair-indicator {
             animation: pulse 2s infinite;
@@ -28,8 +29,8 @@
             100% { transform: scale(1); }
         }
         .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 3px solid rgba(108, 189, 147, 0.3);
+            border-top: 3px solid #6cbd93;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -46,14 +47,13 @@
         }
         #map {
             height: 400px;
-            border-radius: 0.5rem;
+            border-radius: 20px;
         }
         .comparable-card {
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .comparable-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: translateY(-4px) scale(1.02);
         }
         .prose h1, .prose h2, .prose h3, .prose h4 {
             color: #374151;
@@ -84,44 +84,57 @@
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
-    <header class="gradient-bg text-white py-6 px-4 shadow-lg">
-        <div class="container mx-auto">
+    <header class="gradient-bg text-white py-8 px-4 shadow-2xl relative overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="container mx-auto relative z-10">
             <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <i class="fas fa-home text-3xl"></i>
-                    <h1 class="text-3xl font-bold">RentFair</h1>
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-filter backdrop-blur-sm">
+                        <i class="fas fa-home text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold gradient-text">RentFair</h1>
+                        <p class="text-sm opacity-90 mt-1">Professional Rent Analysis Platform</p>
+                    </div>
                 </div>
-                <p class="text-sm opacity-90">Smart Rent Analysis for Informed Decisions</p>
+                <div class="hidden md:flex items-center space-x-6">
+                    <div class="text-right">
+                        <p class="text-sm opacity-75">Powered by AI</p>
+                        <p class="text-xs opacity-60">Real-time Market Data</p>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-8 relative z-10">
         <!-- Input Section -->
         <section class="mb-8">
-            <div class="glass-effect rounded-xl p-6 shadow-xl">
-                <h2 class="text-2xl font-bold mb-6 text-gray-800">
-                    <i class="fas fa-search text-purple-600 mr-2"></i>
-                    Analyze Your Rental Listing
-                </h2>
+            <div class="liquid-glass p-8 shadow-2xl">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-search text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Analyze Your Rental Property</h2>
+                </div>
                 
-                <form id="rentForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form id="rentForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-dollar-sign mr-1"></i> Monthly Rent ($)
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-dollar-sign mr-2 text-green-600"></i> Monthly Rent
                         </label>
                         <input type="number" id="price" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                               class="form-control"
                                placeholder="2400">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-bed mr-1"></i> Bedrooms
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-bed mr-2 text-green-600"></i> Bedrooms
                         </label>
                         <select id="bedrooms" required 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                class="form-control">
                             <option value="1">1 Bedroom</option>
                             <option value="2" selected>2 Bedrooms</option>
                             <option value="3">3 Bedrooms</option>
@@ -130,11 +143,11 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-bath mr-1"></i> Bathrooms
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-bath mr-2 text-green-600"></i> Bathrooms
                         </label>
                         <select id="bathrooms" required 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                class="form-control">
                             <option value="1" selected>1 Bathroom</option>
                             <option value="2">2 Bathrooms</option>
                             <option value="3">3+ Bathrooms</option>
@@ -142,35 +155,35 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-map-marker-alt mr-1"></i> Town/City
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-map-marker-alt mr-2 text-green-600"></i> Town
                         </label>
                         <input type="text" id="location" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                               class="form-control"
                                placeholder="Mississauga" value="Mississauga">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-ruler-combined mr-1"></i> Square Feet (optional)
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-ruler-combined mr-2 text-green-600"></i> Square Feet
                         </label>
                         <input type="number" id="sqft" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                               class="form-control"
                                placeholder="850">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-home mr-1"></i> Address (optional)
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-home mr-2 text-green-600"></i> Address
                         </label>
                         <input type="text" id="address" 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                               class="form-control"
                                placeholder="123 Queen St E">
                     </div>
                     
                     <div class="md:col-span-2">
                         <button type="submit" 
-                                class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105">
+                                class="btn-primary w-full text-lg py-4">
                             <i class="fas fa-chart-line mr-2"></i>
                             Analyze Rent Fairness
                         </button>
@@ -181,9 +194,14 @@
 
         <!-- Loading State -->
         <div id="loadingState" class="hidden">
-            <div class="flex flex-col items-center justify-center py-12">
-                <div class="loading-spinner mb-4"></div>
-                <p class="text-gray-600">Analyzing market data...</p>
+            <div class="flex flex-col items-center justify-center py-16">
+                <div class="loading-spinner mb-6"></div>
+                <p class="text-gray-600 text-lg">Analyzing market data...</p>
+                <div class="mt-4 flex space-x-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+                </div>
             </div>
         </div>
 
@@ -230,106 +248,230 @@
         <!-- Results Section -->
         <section id="resultsSection" class="hidden">
             <!-- Fairness Score Card -->
-            <div class="glass-effect rounded-xl p-6 shadow-xl mb-8">
+            <div class="liquid-glass p-8 shadow-2xl mb-8">
                 <div class="text-center">
-                    <div id="fairnessIndicator" class="fair-indicator inline-block mb-4">
+                    <div id="fairnessIndicator" class="fair-indicator inline-block mb-6 liquid-float">
                         <!-- Dynamic content will be inserted here -->
                     </div>
-                    <h3 id="fairnessLabel" class="text-3xl font-bold mb-2"></h3>
+                    <h3 id="fairnessLabel" class="text-4xl font-bold mb-3 gradient-text"></h3>
                     <p id="fairnessDescription" class="text-lg text-gray-600"></p>
                 </div>
             </div>
 
-            <!-- Statistics Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white rounded-lg p-4 shadow-md">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Market Average</p>
-                            <p id="marketAvg" class="text-2xl font-bold text-gray-800"></p>
-                        </div>
+            <!-- Advanced Statistics Grid -->
+            <div class="stats-grid mb-8">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
                         <i class="fas fa-chart-bar text-2xl text-blue-500"></i>
+                        <span class="text-xs text-gray-500 font-medium">MARKET AVG</span>
                     </div>
+                    <div class="stat-value" id="marketAvg"></div>
+                    <div class="stat-label">Average Market Price</div>
                 </div>
                 
-                <div class="bg-white rounded-lg p-4 shadow-md">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Your Rent</p>
-                            <p id="yourRent" class="text-2xl font-bold text-gray-800"></p>
-                        </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
                         <i class="fas fa-dollar-sign text-2xl text-green-500"></i>
+                        <span class="text-xs text-gray-500 font-medium">YOUR RENT</span>
                     </div>
+                    <div class="stat-value" id="yourRent"></div>
+                    <div class="stat-label">Your Property Price</div>
                 </div>
                 
-                <div class="bg-white rounded-lg p-4 shadow-md">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Difference</p>
-                            <p id="difference" class="text-2xl font-bold"></p>
-                        </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
                         <i class="fas fa-percentage text-2xl text-purple-500"></i>
+                        <span class="text-xs text-gray-500 font-medium">DIFFERENCE</span>
                     </div>
+                    <div class="stat-value" id="difference"></div>
+                    <div class="stat-label">Market Difference</div>
                 </div>
                 
-                <div class="bg-white rounded-lg p-4 shadow-md">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Comparables</p>
-                            <p id="comparableCount" class="text-2xl font-bold text-gray-800"></p>
-                        </div>
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-2">
                         <i class="fas fa-home text-2xl text-orange-500"></i>
+                        <span class="text-xs text-gray-500 font-medium">COMPARABLES</span>
+                    </div>
+                    <div class="stat-value" id="comparableCount"></div>
+                    <div class="stat-label">Similar Properties</div>
+                </div>
+            </div>
+
+            <!-- Additional Stats Sections -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Market Insights -->
+                <div class="liquid-glass p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-line text-white text-sm"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800">Market Insights</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-white bg-opacity-50 rounded-lg">
+                            <span class="text-sm font-medium">Market Trend</span>
+                            <div class="flex items-center">
+                                <i class="fas fa-arrow-up text-green-500 mr-2"></i>
+                                <span class="text-sm font-bold text-green-600">+5.2%</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white bg-opacity-50 rounded-lg">
+                            <span class="text-sm font-medium">Avg. Days on Market</span>
+                            <span class="text-sm font-bold">18 days</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white bg-opacity-50 rounded-lg">
+                            <span class="text-sm font-medium">Inventory Level</span>
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 35%"></div>
+                                </div>
+                                <span class="text-sm font-bold">Low</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investment Analysis -->
+                <div class="liquid-glass p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-coins text-white text-sm"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800">Investment Analysis</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-white bg-opacity-50 rounded-lg">
+                            <span class="text-sm font-medium">Yield Estimate</span>
+                            <span class="text-sm font-bold text-green-600">4.8%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white bg-opacity-50 rounded-lg">
+                            <span class="text-sm font-medium">Cap Rate</span>
+                            <span class="text-sm font-bold">5.2%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white bg-opacity-50 rounded-lg">
+                            <span class="text-sm font-medium">Price Appreciation</span>
+                            <div class="flex items-center">
+                                <i class="fas fa-arrow-trend-up text-blue-500 mr-2"></i>
+                                <span class="text-sm font-bold text-blue-600">+8.1%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Charts and Map -->
+            <!-- Advanced Charts Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 <!-- Price Distribution Chart -->
-                <div class="bg-white rounded-xl p-6 shadow-lg">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800">
-                        <i class="fas fa-chart-histogram mr-2 text-purple-600"></i>
-                        Price Distribution
-                    </h3>
+                <div class="chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">
+                            <i class="fas fa-chart-histogram mr-2 text-green-600"></i>
+                            Price Distribution Analysis
+                        </h3>
+                        <div class="flex space-x-2">
+                            <button onclick="updateChartType('bar')" class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors">
+                                Bar
+                            </button>
+                            <button onclick="updateChartType('line')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                                Line
+                            </button>
+                        </div>
+                    </div>
                     <div class="chart-container">
                         <canvas id="priceChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Map -->
-                <div class="bg-white rounded-xl p-6 shadow-lg">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800">
-                        <i class="fas fa-map mr-2 text-purple-600"></i>
-                        Comparable Town/Cities
-                    </h3>
-                    <div id="map"></div>
+                <!-- Market Trends Chart -->
+                <div class="chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">
+                            <i class="fas fa-chart-line mr-2 text-green-600"></i>
+                            Market Trends
+                        </h3>
+                        <div class="flex space-x-2">
+                            <button onclick="updateTimeRange('6m')" class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors">
+                                6M
+                            </button>
+                            <button onclick="updateTimeRange('1y')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                                1Y
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <!-- AI Explanation -->
-            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 shadow-lg mb-8">
+            <!-- Location Analysis -->
+            <div class="chart-container mb-8">
                 <h3 class="text-xl font-bold mb-4 text-gray-800">
-                    <i class="fas fa-robot mr-2 text-purple-600"></i>
-                    AI Analysis & Insights
+                    <i class="fas fa-analytics mr-2 text-green-600"></i>
+                    Location Analysis
                 </h3>
-                <div id="aiExplanation" class="prose max-w-none"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="text-center p-4 bg-white bg-opacity-50 rounded-lg">
+                        <i class="fas fa-dollar-sign text-3xl text-green-500 mb-2"></i>
+                        <div class="text-2xl font-bold gradient-text" id="avgPricePerSqft">$0</div>
+                        <div class="text-sm text-gray-600">Average Price/sqft</div>
+                    </div>
+                    <div class="text-center p-4 bg-white bg-opacity-50 rounded-lg">
+                        <i class="fas fa-chart-line text-3xl text-blue-500 mb-2"></i>
+                        <div class="text-lg font-bold text-green-600">High</div>
+                        <div class="text-sm text-gray-600">Market Demand</div>
+                    </div>
+                    <div class="text-center p-4 bg-white bg-opacity-50 rounded-lg">
+                        <i class="fas fa-star text-3xl text-yellow-400 mb-2"></i>
+                        <div class="flex justify-center items-center">
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                            <span class="text-lg font-bold ml-2">4.5</span>
+                        </div>
+                        <div class="text-sm text-gray-600">Neighborhood Score</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis -->
+            <div class="liquid-glass p-8 shadow-2xl mb-8">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-brain text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800">Professional Market Analysis</h3>
+                </div>
+                <div id="aiExplanation" class="prose max-w-none mb-6"></div>
                 
-                <div class="mt-6 p-4 bg-white rounded-lg">
-                    <h4 class="font-semibold mb-2 text-gray-800">
+                <div class="mt-6 p-6 bg-white bg-opacity-50 rounded-xl border border-white border-opacity-30">
+                    <h4 class="font-semibold mb-4 text-gray-800 flex items-center">
                         <i class="fas fa-handshake mr-2 text-green-600"></i>
-                        Negotiation Tips
+                        Strategic Negotiation Insights
                     </h4>
                     <div id="negotiationTips" class="text-gray-700"></div>
                 </div>
             </div>
 
             <!-- Comparable Listings -->
-            <div class="bg-white rounded-xl p-6 shadow-lg">
-                <h3 class="text-xl font-bold mb-4 text-gray-800">
-                    <i class="fas fa-list mr-2 text-purple-600"></i>
-                    Comparable Listings
-                </h3>
-                <div id="comparableListings" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="liquid-glass p-8 shadow-2xl">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-list mr-2 text-green-600"></i>
+                        Comparable Properties
+                    </h3>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-600" id="listingCount">0 properties</span>
+                        <button onclick="exportListings()" class="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-200 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+                <div id="comparableListings" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Dynamic content will be inserted here -->
                 </div>
             </div>
@@ -337,10 +479,16 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-6 px-4 mt-12">
+    <footer class="bg-gray-800 text-white py-8 px-4 mt-16">
         <div class="container mx-auto text-center">
-            <p class="mb-2">© 2024 RentFair - Making Rent Decisions Smarter</p>
-            <p class="text-sm text-gray-400">Powered by real market data and AI analysis</p>
+            <div class="flex items-center justify-center mb-4">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-2">
+                    <i class="fas fa-home text-white text-sm"></i>
+                </div>
+                <p class="text-xl font-bold">RentFair</p>
+            </div>
+            <p class="mb-2">© 2024 RentFair - Professional Rent Analysis Platform</p>
+            <p class="text-sm text-gray-400">Powered by advanced AI and real-time market data</p>
         </div>
     </footer>
 

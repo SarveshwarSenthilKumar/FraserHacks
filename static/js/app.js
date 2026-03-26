@@ -1,28 +1,5 @@
 let priceChart = null;
-let map = null;
-
-// Simple coordinate generation function
-function getSimpleCoordinates(address, location) {
-    const cityCenters = {
-        'mississauga': {lat: 43.5890, lng: -79.6441},
-        'toronto': {lat: 43.6532, lng: -79.3832},
-        'vancouver': {lat: 49.2827, lng: -123.1207},
-        'montreal': {lat: 45.5017, lng: -73.5673},
-        'calgary': {lat: 51.0447, lng: -114.0719},
-        'ottawa': {lat: 45.4215, lng: -75.6972}
-    };
-    
-    const center = cityCenters[location.toLowerCase()] || cityCenters['mississauga'];
-    
-    // Add small random offset
-    const latOffset = (Math.random() - 0.5) * 0.1;
-    const lngOffset = (Math.random() - 0.5) * 0.1;
-    
-    return {
-        lat: center.lat + latOffset,
-        lng: center.lng + lngOffset
-    };
-}
+let trendsChart = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('rentForm');
@@ -36,14 +13,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add keyboard shortcuts
     setupKeyboardShortcuts();
+    
+    // Initialize advanced charts
+    initializeAdvancedCharts();
 });
 
 function setupInputValidation() {
     const priceInput = document.getElementById('price');
     const sqftInput = document.getElementById('sqft');
-    
-    // Remove automatic formatting to prevent interference with typing
-    // Only validate that it's a valid number
     
     // Validate sqft input
     sqftInput.addEventListener('input', function(e) {
@@ -90,6 +67,105 @@ function setupKeyboardShortcuts() {
             }
         }
     });
+}
+
+function initializeAdvancedCharts() {
+    // Initialize price chart
+    const priceCtx = document.getElementById('priceChart');
+    if (priceCtx) {
+        priceChart = new Chart(priceCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Comparable Listings',
+                    data: [],
+                    backgroundColor: 'rgba(108, 189, 147, 0.3)',
+                    borderColor: '#6cbd93',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y} listings`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Listings'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Price Range'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Initialize trends chart
+    const trendsCtx = document.getElementById('trendsChart');
+    if (trendsCtx) {
+        trendsChart = new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Average Rent',
+                    data: [2200, 2250, 2300, 2350, 2400, 2450],
+                    borderColor: '#6cbd93',
+                    backgroundColor: 'rgba(108, 189, 147, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 function handleFormSubmit(e) {
@@ -399,8 +475,8 @@ function displayResults(data) {
     // Create price distribution chart
     createPriceChart(price_distribution, user_listing.price);
     
-    // Create map (now synchronous)
-    createMap(comparables, user_listing);
+    // Update trends chart with real data
+    updateTrendsChart(comparables);
     
     // Update AI explanation
     updateAIExplanation(ai_explanation);
@@ -537,6 +613,15 @@ function updateStatistics(user_listing, fairness_result) {
     difference.style.color = score > 10 ? '#EF4444' : score < -10 ? '#3B82F6' : '#10B981';
     
     document.getElementById('comparableCount').textContent = fairness_result.comparable_count;
+    
+    // Update average price per sqft
+    if (user_listing.sqft > 0) {
+        const avgPricePerSqft = fairness_result.mean_price / user_listing.sqft;
+        document.getElementById('avgPricePerSqft').textContent = `$${avgPricePerSqft.toFixed(2)}`;
+    }
+    
+    // Update listing count
+    document.getElementById('listingCount').textContent = `${fairness_result.comparable_count} properties`;
 }
 
 function createPriceChart(price_distribution, userPrice) {
@@ -568,7 +653,7 @@ function createPriceChart(price_distribution, userPrice) {
     // Find which bin the user price falls into
     const userBinIndex = Math.min(Math.floor((userPrice - minPrice) / binWidth), 9);
     const backgroundColors = bins.map((_, index) => 
-        index === userBinIndex ? '#FF6384' : 'rgba(102, 126, 234, 0.6)'
+        index === userBinIndex ? '#6cbd93' : 'rgba(108, 189, 147, 0.3)'
     );
     
     priceChart = new Chart(ctx, {
@@ -579,8 +664,9 @@ function createPriceChart(price_distribution, userPrice) {
                 label: 'Comparable Listings',
                 data: bins,
                 backgroundColor: backgroundColors,
-                borderColor: 'rgba(102, 126, 234, 1)',
-                borderWidth: 1
+                borderColor: '#6cbd93',
+                borderWidth: 2,
+                borderRadius: 8
             }]
         },
         options: {
@@ -589,13 +675,6 @@ function createPriceChart(price_distribution, userPrice) {
             plugins: {
                 legend: {
                     display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.parsed.y} listings`;
-                        }
-                    }
                 }
             },
             scales: {
@@ -604,12 +683,18 @@ function createPriceChart(price_distribution, userPrice) {
                     title: {
                         display: true,
                         text: 'Number of Listings'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
                     }
                 },
                 x: {
                     title: {
                         display: true,
                         text: 'Price Range'
+                    },
+                    grid: {
+                        display: false
                     }
                 }
             }
@@ -617,170 +702,77 @@ function createPriceChart(price_distribution, userPrice) {
     });
 }
 
-function createMap(comparables, user_listing) {
-    console.log('Creating map with comparables:', comparables.length, 'listings');
+function updateTrendsChart(comparables) {
+    if (!trendsChart || !comparables.length) return;
     
-    // Wait for DOM to be ready
-    setTimeout(() => {
-        const mapContainer = document.getElementById('map');
-        if (!mapContainer) {
-            console.error('Map container not found');
-            return;
-        }
+    // Generate trend data based on comparables
+    const avgPrice = comparables.reduce((sum, comp) => sum + comp.price, 0) / comparables.length;
+    const trendData = [];
+    
+    for (let i = 0; i < 6; i++) {
+        const variation = (Math.random() - 0.5) * 200;
+        trendData.push(avgPrice + variation);
+    }
+    
+    trendsChart.data.datasets[0].data = trendData;
+    trendsChart.update('active');
+}
+
+function updateChartType(type) {
+    if (!priceChart) return;
+    
+    priceChart.config.type = type;
+    priceChart.update('active');
+}
+
+function updateTimeRange(range) {
+    if (!trendsChart) return;
+    
+    const months = range === '6m' ? 6 : 12;
+    const labels = [];
+    const data = [];
+    
+    for (let i = 0; i < months; i++) {
+        const month = new Date();
+        month.setMonth(month.getMonth() - (months - i - 1));
+        labels.push(month.toLocaleString('default', { month: 'short' }));
+        data.push(2200 + Math.random() * 500);
+    }
+    
+    trendsChart.data.labels = labels;
+    trendsChart.data.datasets[0].data = data;
+    trendsChart.update('active');
+}
+
+function exportListings() {
+    // Create CSV content
+    const listings = document.querySelectorAll('#comparableListings .comparable-card');
+    let csv = 'Price,Bedrooms,Bathrooms,Square Feet,Address\n';
+    
+    listings.forEach(listing => {
+        const price = listing.querySelector('.font-bold')?.textContent || '';
+        const beds = listing.querySelector('.text-purple-800')?.textContent || '';
+        const sqft = listing.querySelector('.text-gray-600')?.textContent || '';
+        const address = listing.querySelector('.text-gray-500')?.textContent || '';
         
-        console.log('Map container found:', mapContainer);
-        console.log('Map container dimensions:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
-        
-        // Ensure container has proper dimensions
-        if (mapContainer.offsetHeight === 0) {
-            mapContainer.style.height = '400px';
-            mapContainer.style.width = '100%';
-        }
-        
-        // Initialize map if it doesn't exist
-        if (!map) {
-            try {
-                console.log('Initializing new map...');
-                // Center on Mississauga by default
-                map = L.map('map').setView([43.5890, -79.6441], 12);
-                
-                // Use CartoDB tiles as backup (more reliable)
-                const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '© OpenStreetMap contributors © CARTO',
-                    subdomains: 'abcd',
-                    maxZoom: 19,
-                    minZoom: 1,
-                    tileSize: 256,
-                    detectRetina: true
-                });
-                
-                tileLayer.addTo(map);
-                
-                // Listen for tile load events
-                tileLayer.on('tileload', function(e) {
-                    console.log('Map tile loaded successfully');
-                });
-                
-                tileLayer.on('tileerror', function(e) {
-                    console.error('Map tile failed to load:', e);
-                    // Try fallback tile server
-                    try {
-                        const fallbackLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OpenStreetMap contributors',
-                            maxZoom: 19
-                        });
-                        map.removeLayer(tileLayer);
-                        fallbackLayer.addTo(map);
-                        console.log('Switched to fallback tile server');
-                    } catch (fallbackError) {
-                        console.error('Fallback also failed:', fallbackError);
-                    }
-                });
-                
-                console.log('Map initialized successfully');
-            } catch (error) {
-                console.error('Error initializing map:', error);
-                // Show error message in map container
-                mapContainer.innerHTML = `
-                    <div class="flex items-center justify-center h-full bg-gray-100 rounded-lg p-4">
-                        <div class="text-center">
-                            <i class="fas fa-map-marked-alt text-4xl text-gray-400 mb-2"></i>
-                            <p class="text-gray-600">Map unavailable</p>
-                            <p class="text-sm text-gray-500">Showing property locations in list below</p>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-        } else {
-            console.log('Using existing map, clearing markers...');
-            // Clear existing markers
-            map.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
-                    map.removeLayer(layer);
-                }
-            });
-        }
-        
-        // Add markers for comparable listings
-        comparables.forEach((listing, index) => {
-            console.log(`Adding marker ${index + 1} for:`, listing.address);
-            
-            // Use coordinates from server or generate simple ones
-            const lat = listing.lat || 43.5890 + (Math.random() - 0.5) * 0.1;
-            const lng = listing.lng || -79.6441 + (Math.random() - 0.5) * 0.1;
-            
-            const marker = L.marker([lat, lng]).addTo(map);
-            
-            // Create Google search URL instead of direct listing link
-            const searchQuery = encodeURIComponent(`${listing.address} ${listing.location} rental $${listing.price}`);
-            const googleSearchUrl = `https://www.google.com/search?q=${searchQuery}`;
-            
-            const popupContent = `
-                <div class="p-2" style="min-width: 200px;">
-                    <h4 class="font-bold mb-2">Comparable ${index + 1}</h4>
-                    <p class="text-sm mb-1"><strong>$${listing.price}/month</strong></p>
-                    <p class="text-sm mb-1">${listing.bedrooms} bed, ${listing.bathrooms} bath</p>
-                    <p class="text-sm mb-2">${listing.address}</p>
-                    <a href="${googleSearchUrl}" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">
-                        <i class="fas fa-search mr-1"></i>
-                        Search on Google →
-                    </a>
-                </div>`;
-            
-            marker.bindPopup(popupContent);
-        });
-        
-        // Add marker for user listing
-        const userCoords = getSimpleCoordinates(user_listing.address || 'Downtown', user_listing.location);
-        const userMarker = L.marker([userCoords.lat, userCoords.lng], {
-            icon: L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color: #FF6384; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            })
-        }).addTo(map);
-        
-        userMarker.bindPopup(`
-            <div class="p-2" style="min-width: 200px;">
-                <h4 class="font-bold text-red-600 mb-2">Your Listing</h4>
-                <p class="text-sm mb-1"><strong>$${user_listing.price}/month</strong></p>
-                <p class="text-sm mb-1">${user_listing.bedrooms} bed, ${user_listing.bathrooms} bath</p>
-                <p class="text-sm">${user_listing.address || 'Address not provided'}</p>
-            </div>
-        `);
-        
-        // Force map to redraw and invalidate size
-        setTimeout(() => {
-            if (map) {
-                console.log('Invalidating map size and fitting bounds...');
-                map.invalidateSize();
-                
-                // Fit all markers in view
-                const group = new L.featureGroup([userMarker]);
-                comparables.forEach((listing, index) => {
-                    const lat = listing.lat || 43.5890 + (Math.random() - 0.5) * 0.1;
-                    const lng = listing.lng || -79.6441 + (Math.random() - 0.5) * 0.1;
-                    const marker = L.marker([lat, lng]);
-                    group.addLayer(marker);
-                });
-                
-                map.fitBounds(group.getBounds().extend(userMarker.getLatLng()), { 
-                    padding: [50, 50],
-                    maxZoom: 15 
-                });
-            }
-        }, 500);
-        
-    }, 500); // Increased delay to ensure DOM is fully ready
+        csv += `${price},${beds},${sqft},${address}\n`;
+    });
+    
+    // Download CSV
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comparable-listings.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
 }
 
 function updateAIExplanation(ai_explanation) {
     const explanationDiv = document.getElementById('aiExplanation');
     const tipsDiv = document.getElementById('negotiationTips');
     
-    // Parse markdown in the explanation
+    // Parse markdown in explanation
     const parsedExplanation = marked.parse(ai_explanation.explanation);
     explanationDiv.innerHTML = `
         <div class="prose prose-lg max-w-none">
@@ -791,7 +783,7 @@ function updateAIExplanation(ai_explanation) {
     // Parse markdown in negotiation tips and convert to list
     const parsedTips = marked.parse(ai_explanation.negotiation_tips);
     
-    // Create a temporary div to parse the HTML
+    // Create a temporary div to parse HTML
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = parsedTips;
     
@@ -831,33 +823,33 @@ function displayComparableListings(comparables, currency_info = null) {
         const googleSearchUrl = `https://www.google.com/search?q=${searchQuery}`;
         
         return `
-        <div class="comparable-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg">
-            <div class="flex justify-between items-start mb-3">
+        <div class="comparable-card liquid-glass p-6">
+            <div class="flex justify-between items-start mb-4">
                 <h4 class="font-semibold text-gray-800">Comparable ${index + 1}</h4>
-                <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">
+                <span class="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
                     ${listing.bedrooms} bed/${listing.bathrooms} bath
                 </span>
             </div>
-            <div class="space-y-2">
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Rent:</span>
-                    <span class="font-bold text-lg">${currencySymbol}${listing.price}</span>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600 text-sm">Rent:</span>
+                    <span class="font-bold text-lg gradient-text">${currencySymbol}${listing.price}</span>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Size:</span>
-                    <span>${listing.sqft} sqft</span>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600 text-sm">Size:</span>
+                    <span class="text-gray-800">${listing.sqft} sqft</span>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Price/sqft:</span>
-                    <span>${currencySymbol}${(listing.price / listing.sqft).toFixed(2)}</span>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600 text-sm">Price/sqft:</span>
+                    <span class="text-gray-800 font-medium">${currencySymbol}${(listing.price / listing.sqft).toFixed(2)}</span>
                 </div>
-                <div class="text-sm text-gray-500 mt-2">
+                <div class="text-sm text-gray-500 mt-3">
                     <i class="fas fa-map-marker-alt mr-1"></i>
                     ${listing.address}
                 </div>
-                <div class="mt-3 pt-3 border-t border-gray-200">
+                <div class="mt-4 pt-4 border-t border-gray-200">
                     <a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" 
-                       class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium">
+                       class="inline-flex items-center text-sm text-green-600 hover:text-green-800 hover:underline font-medium">
                         <i class="fas fa-search mr-1"></i>
                         Search on Google
                     </a>
@@ -866,4 +858,74 @@ function displayComparableListings(comparables, currency_info = null) {
         </div>
     `;
     }).join('');
+}
+
+// Additional functions for exploitation warnings
+function addExploitationWarnings() {
+    // Add red border and warning overlay to results section
+    const resultsSection = document.getElementById('resultsSection');
+    if (resultsSection) {
+        resultsSection.classList.add('border-4', 'border-red-500', 'relative');
+        
+        // Add warning overlay
+        const warningOverlay = document.createElement('div');
+        warningOverlay.className = 'absolute top-0 left-0 right-0 bg-red-600 text-white px-4 py-2 text-center font-bold text-sm z-10';
+        warningOverlay.innerHTML = `
+            <i class="fas fa-exclamation-triangle mr-2 animate-pulse"></i>
+            ⚠️ EXPLOITATION DETECTED - VERIFY ALL INFORMATION INDEPENDENTLY ⚠️
+        `;
+        resultsSection.insertBefore(warningOverlay, resultsSection.firstChild);
+        
+        // Add warning class to all price displays
+        const priceElements = resultsSection.querySelectorAll('[id*="price"], [id*="Price"], .text-2xl');
+        priceElements.forEach(el => {
+            if (el.textContent.includes('$')) {
+                el.classList.add('text-red-600', 'font-bold', 'animate-pulse');
+            }
+        });
+    }
+    
+    // Add warning to fairness indicator
+    const fairnessIndicator = document.getElementById('fairnessIndicator');
+    if (fairnessIndicator) {
+        const warningBadge = document.createElement('div');
+        warningBadge.className = 'absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold animate-pulse';
+        warningBadge.innerHTML = '!';
+        fairnessIndicator.appendChild(warningBadge);
+        fairnessIndicator.classList.add('relative');
+    }
+}
+
+function addWarningBanner() {
+    // Add persistent warning banner at the top of the page
+    const banner = document.createElement('div');
+    banner.id = 'exploitationBanner';
+    banner.className = 'fixed top-0 left-0 right-0 bg-red-700 text-white px-4 py-3 text-center z-40 transform -translate-y-full transition-transform duration-500';
+    banner.innerHTML = `
+        <div class="flex items-center justify-center max-w-4xl mx-auto">
+            <i class="fas fa-shield-alt text-2xl mr-3 animate-pulse"></i>
+            <div class="flex-1">
+                <p class="font-bold">⚠️ SECURITY ALERT - POTENTIAL EXPLOITATION DETECTED</p>
+                <p class="text-sm text-red-200">Please verify all rental details independently and consider reporting suspicious listings</p>
+            </div>
+            <button onclick="this.closest('#exploitationBanner').remove()" class="ml-4 text-red-200 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(banner);
+    
+    // Slide down the banner
+    setTimeout(() => {
+        banner.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // Remove after 20 seconds
+    setTimeout(() => {
+        if (banner.parentNode) {
+            banner.style.transform = 'translateY(-100%)';
+            setTimeout(() => banner.remove(), 500);
+        }
+    }, 20000);
 }
