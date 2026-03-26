@@ -16,7 +16,7 @@
 
 /* Liquid Glass Background */
 body {
-    background: linear-gradient(135deg, #667eea 0%, #FFD700 25%, #6cbd93 50%, #1e6e30 75%, #667eea 100%);
+    background: linear-gradient(135deg, #667eea 0%, #b1e8ac 25%, #6cbd93 50%, #1e6e30 75%, #667eea 100%);
     background-size: 400% 400%;
     animation: gradientShift 15s ease infinite;
     min-height: 100vh;

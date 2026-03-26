@@ -3,7 +3,6 @@ update the ui
 add advanced graphs and stats
 update to make sure the ai cannot be exploited
 
-remove map
 update the footer
 fix deployment issues
 look at header
