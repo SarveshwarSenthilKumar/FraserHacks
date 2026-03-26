@@ -715,24 +715,30 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
         if GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY':
             # Create prompt for AI explanation
             prompt = f"""
-            Analyze this rental property and provide negotiation advice:
+            Analyze this rental property and provide negotiation advice in **markdown format**:
             
-            Property Details:
-            - Price: ${user_listing['price']}/month
-            - Bedrooms: {user_listing['bedrooms']}
-            - Bathrooms: {user_listing['bathrooms']}
-            - Location: {user_listing['location']}
-            - Square Feet: {user_listing['sqft']}
+            ## Property Details
+            - **Price:** ${user_listing['price']}/month
+            - **Bedrooms:** {user_listing['bedrooms']}
+            - **Bathrooms:** {user_listing['bathrooms']}
+            - **Location:** {user_listing['location']}
+            - **Square Feet:** {user_listing['sqft']}
             
-            Market Analysis:
-            - Fairness Score: {fairness_result['score']:.1f}%
-            - Market Label: {fairness_result['label']}
-            - Comparable Properties: {len(comparables)}
-            - Average Market Price: ${fairness_result.get('mean_price', 0):.0f}
+            ## Market Analysis
+            - **Fairness Score:** {fairness_result['score']:.1f}%
+            - **Market Label:** {fairness_result['label']}
+            - **Comparable Properties:** {len(comparables)}
+            - **Average Market Price:** ${fairness_result.get('mean_price', 0):.0f}
             
-            Please provide:
-            EXPLANATION: [Brief explanation of the market position and what the score means]
-            TIPS: [3-4 specific negotiation tips based on the analysis]
+            Please provide a comprehensive analysis using markdown formatting:
+            
+            ### Market Analysis
+            [Provide a detailed explanation of the market position, what the score means, and how this property compares to similar rentals in the area. Use **bold**, *italic*, and bullet points as appropriate.]
+            
+            ### Negotiation Strategy
+            [Provide 3-4 specific negotiation tips based on the analysis. Use a numbered list or bullet points with **bold** key terms.]
+            
+            Format your response with proper markdown headers, bold text, bullet points, and emphasis where appropriate.
             """
             
             model = genai.GenerativeModel('gemini-2.5-flash-lite')
@@ -740,7 +746,17 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
             response_text = response.text
             
             # Parse the response
-            if 'EXPLANATION:' in response_text and 'TIPS:' in response_text:
+            if '### Market Analysis' in response_text and '### Negotiation Strategy' in response_text:
+                # Extract content between markdown headers
+                explanation_part = response_text.split('### Market Analysis')[1].split('### Negotiation Strategy')[0].strip()
+                tips_part = response_text.split('### Negotiation Strategy')[1].strip()
+                
+                return {
+                    "explanation": explanation_part,
+                    "negotiation_tips": tips_part
+                }
+            elif 'EXPLANATION:' in response_text and 'TIPS:' in response_text:
+                # Fallback to old format parsing
                 explanation_part = response_text.split('EXPLANATION:')[1].split('TIPS:')[0].strip()
                 tips_part = response_text.split('TIPS:')[1].strip()
                 
@@ -786,17 +802,21 @@ def get_detailed_fallback_explanation(user_listing, fairness_result, comparables
         strategy = "focus on securing favorable lease terms and minor improvements"
     
     explanation = f"""
-    This {user_listing['bedrooms']}-bedroom, {user_listing['bathrooms']}-bathroom property in {user_listing['location']} 
-    is listed at ${user_listing['price']}/month, which is {market_position}. Based on our analysis of {len(comparables)} comparable listings 
-    in the area, the market average is ${avg_price:.0f} with properties ranging from {price_range}.
+    ## Market Analysis
+
+    This {user_listing['bedrooms']}-bedroom, {user_listing['bathrooms']}-bathroom property in **{user_listing['location']}** 
+    is listed at **${user_listing['price']}/month**, which is {market_position}. Based on our analysis of {len(comparables)} comparable listings 
+    in the area, the market average is **${avg_price:.0f}** with properties ranging from {price_range}.
     
-    The price per square foot of ${user_listing['price'] / user_listing['sqft'] if user_listing['sqft'] else 0:.2f} 
+    The price per square foot of **${user_listing['price'] / user_listing['sqft'] if user_listing['sqft'] else 0:.2f}** 
     {'is competitive' if abs(score) <= 5 else 'offers good value' if score < -5 else 'requires market adjustment'}.
     
     {market_position.capitalize()} positioning provides you {strategy}.
     """
     
     tips = f"""
+    ## Negotiation Strategy
+    
     • Research the {len(comparables)} comparable properties thoroughly to strengthen your negotiation position with specific market data points
     • Document any unique features or recent upgrades to the property that justify your {market_position} pricing
     • Consider the seasonal rental market in {user_listing['location']} - timing your negotiation during peak demand periods may yield better terms

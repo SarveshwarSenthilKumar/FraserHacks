@@ -610,18 +610,41 @@ function updateAIExplanation(ai_explanation) {
     const explanationDiv = document.getElementById('aiExplanation');
     const tipsDiv = document.getElementById('negotiationTips');
     
+    // Parse markdown in the explanation
+    const parsedExplanation = marked.parse(ai_explanation.explanation);
     explanationDiv.innerHTML = `
         <div class="prose prose-lg max-w-none">
-            <p class="text-gray-700 leading-relaxed">${ai_explanation.explanation}</p>
+            <div class="text-gray-700 leading-relaxed">${parsedExplanation}</div>
         </div>
     `;
     
+    // Parse markdown in negotiation tips and convert to list
+    const parsedTips = marked.parse(ai_explanation.negotiation_tips);
+    
+    // Create a temporary div to parse the HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = parsedTips;
+    
+    // Extract list items or paragraphs
+    let listItems = [];
+    const listElements = tempDiv.querySelectorAll('li');
+    const paragraphs = tempDiv.querySelectorAll('p');
+    
+    if (listElements.length > 0) {
+        listItems = Array.from(listElements).map(li => li.innerHTML);
+    } else if (paragraphs.length > 0) {
+        listItems = Array.from(paragraphs).map(p => p.innerHTML);
+    } else {
+        // Fallback to manual parsing with bullet points
+        listItems = ai_explanation.negotiation_tips.split('•').filter(tip => tip.trim()).map(tip => tip.trim());
+    }
+    
     tipsDiv.innerHTML = `
         <ul class="space-y-2">
-            ${ai_explanation.negotiation_tips.split('•').filter(tip => tip.trim()).map(tip => 
+            ${listItems.map(tip => 
                 `<li class="flex items-start">
                     <i class="fas fa-check-circle text-green-500 mt-1 mr-2 flex-shrink-0"></i>
-                    <span>${tip.trim()}</span>
+                    <span>${tip}</span>
                 </li>`
             ).join('')}
         </ul>
