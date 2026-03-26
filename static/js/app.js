@@ -226,7 +226,12 @@ function animateSuccess() {
 }
 
 function displayResults(data) {
-    const { user_listing, fairness_result, comparables, ai_explanation, price_distribution, warnings, data_quality } = data;
+    const { user_listing, fairness_result, comparables, ai_explanation, price_distribution, warnings, data_quality, currency_info } = data;
+    
+    // Display currency info if available
+    if (currency_info) {
+        displayCurrencyInfo(currency_info);
+    }
     
     // Display warnings if any
     if (warnings && warnings.length > 0) {
@@ -249,13 +254,47 @@ function displayResults(data) {
     updateAIExplanation(ai_explanation);
     
     // Display comparable listings
-    displayComparableListings(comparables);
+    displayComparableListings(comparables, currency_info);
     
     // Show results section
     document.getElementById('resultsSection').classList.remove('hidden');
     
     // Scroll to results
     document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function displayCurrencyInfo(currency_info) {
+    const currencyContainer = document.getElementById('currencyInfoContainer');
+    if (!currencyContainer) {
+        // Create currency info container if it doesn't exist
+        const container = document.createElement('div');
+        container.id = 'currencyInfoContainer';
+        container.className = 'mb-4';
+        container.innerHTML = `
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-800">
+                            <i class="fas fa-globe mr-2"></i>
+                            International Market Analysis
+                        </h3>
+                        <p class="text-sm text-blue-600 mt-1">
+                            Analyzing property in <span id="countryName" class="font-medium"></span> using <span id="currencySymbol" class="font-medium"></span> currency
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <span id="currencyCode" class="text-2xl font-bold text-blue-800"></span>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('resultsSection').insertBefore(container, document.getElementById('resultsSection').firstChild);
+    }
+    
+    // Update currency info
+    document.getElementById('countryName').textContent = currency_info.country;
+    document.getElementById('currencySymbol').textContent = currency_info.symbol;
+    document.getElementById('currencyCode').textContent = currency_info.currency;
 }
 
 function displayWarnings(warnings) {
@@ -589,12 +628,13 @@ function updateAIExplanation(ai_explanation) {
     `;
 }
 
-function displayComparableListings(comparables) {
+function displayComparableListings(comparables, currency_info = null) {
     const container = document.getElementById('comparableListings');
+    const currencySymbol = currency_info ? currency_info.symbol : '$';
     
     container.innerHTML = comparables.map((listing, index) => {
         // Create Google search URL for the property
-        const searchQuery = encodeURIComponent(`${listing.address} ${listing.location} rental $${listing.price}`);
+        const searchQuery = encodeURIComponent(`${listing.address} ${listing.location} rental ${currencySymbol}${listing.price}`);
         const googleSearchUrl = `https://www.google.com/search?q=${searchQuery}`;
         
         return `
@@ -608,7 +648,7 @@ function displayComparableListings(comparables) {
             <div class="space-y-2">
                 <div class="flex justify-between">
                     <span class="text-gray-600">Rent:</span>
-                    <span class="font-bold text-lg">$${listing.price}</span>
+                    <span class="font-bold text-lg">${currencySymbol}${listing.price}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Size:</span>
@@ -616,7 +656,7 @@ function displayComparableListings(comparables) {
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Price/sqft:</span>
-                    <span>$${(listing.price / listing.sqft).toFixed(2)}</span>
+                    <span>${currencySymbol}${(listing.price / listing.sqft).toFixed(2)}</span>
                 </div>
                 <div class="text-sm text-gray-500 mt-2">
                     <i class="fas fa-map-marker-alt mr-1"></i>

@@ -66,8 +66,9 @@ def generate_simple_coordinates(address, location):
 
 def generate_simple_coordinates(address, location):
     """Generate simple coordinates without any external dependencies"""
-    # Simple city center coordinates
+    # International city center coordinates
     city_centers = {
+        # Canada
         'mississauga': [43.5890, -79.6441],
         'toronto': [43.6532, -79.3832],
         'vancouver': [49.2827, -123.1207],
@@ -90,11 +91,203 @@ def generate_simple_coordinates(address, location):
         'barrie': [44.3894, -79.6903],
         'guelph': [43.5448, -80.2482],
         'kingston': [44.2312, -76.4860],
-        'windsor': [42.3149, -83.0703]
+        'windsor': [42.3149, -83.0703],
+        
+        # USA
+        'new york': [40.7128, -74.0060],
+        'los angeles': [34.0522, -118.2437],
+        'chicago': [41.8781, -87.6298],
+        'houston': [29.7604, -95.3698],
+        'phoenix': [33.4484, -112.0740],
+        'philadelphia': [39.9526, -75.1652],
+        'san antonio': [29.4241, -98.4936],
+        'san diego': [32.7157, -117.1611],
+        'dallas': [32.7767, -96.7970],
+        'san jose': [37.3382, -121.8863],
+        'austin': [30.2672, -97.7431],
+        'jacksonville': [30.3322, -81.6557],
+        'fort worth': [32.7555, -97.3308],
+        'columbus': [39.9612, -82.9988],
+        'charlotte': [35.2271, -80.8431],
+        'san francisco': [37.7749, -122.4194],
+        'indianapolis': [39.7684, -86.1581],
+        'seattle': [47.6062, -122.3321],
+        'denver': [39.7392, -104.9903],
+        'washington': [38.9072, -77.0369],
+        'boston': [42.3601, -71.0589],
+        'el paso': [31.7619, -106.4850],
+        'detroit': [42.3314, -83.0458],
+        'nashville': [36.1627, -86.7816],
+        'portland': [45.5152, -122.6784],
+        'memphis': [35.1495, -90.0490],
+        'oklahoma city': [35.4676, -97.5164],
+        'las vegas': [36.1699, -115.1398],
+        'louisville': [38.2527, -85.7585],
+        'milwaukee': [43.0389, -87.9065],
+        'albuquerque': [35.0844, -106.6504],
+        'tucson': [32.2226, -110.9747],
+        'fresno': [36.7378, -119.7871],
+        'sacramento': [38.5816, -121.4944],
+        'kansas city': [39.0997, -94.5786],
+        'long beach': [33.7701, -118.1937],
+        'mesa': [33.4152, -111.8315],
+        'atlanta': [33.7490, -84.3880],
+        'omaha': [41.2565, -95.9345],
+        'raleigh': [35.7796, -78.6382],
+        'miami': [25.7617, -80.1918],
+        'minneapolis': [44.9778, -93.2650],
+        'tampa': [27.9506, -82.4572],
+        'tulsa': [36.1540, -95.9944],
+        'arlington': [32.7357, -97.1081],
+        'new orleans': [29.9511, -90.0715],
+        
+        # UK
+        'london': [51.5074, -0.1278],
+        'manchester': [53.4808, -2.2426],
+        'birmingham': [52.4862, -1.8904],
+        'glasgow': [55.8642, -4.2518],
+        'leeds': [53.8008, -1.5491],
+        'sheffield': [53.3811, -1.4701],
+        'bristol': [51.4545, -2.5879],
+        'liverpool': [53.4084, -2.9916],
+        'edinburgh': [55.9533, -3.1883],
+        'cardiff': [51.4816, -3.1791],
+        
+        # Australia
+        'sydney': [-33.8688, 151.2093],
+        'melbourne': [-37.8136, 144.9631],
+        'brisbane': [-27.4698, 153.0251],
+        'perth': [-31.9505, 115.8605],
+        'adelaide': [-34.9285, 138.6007],
+        'gold coast': [-28.0167, 153.4000],
+        'canberra': [-35.2809, 149.1300],
+        'newcastle': [-32.9283, 151.7817],
+        'wollongong': [-34.4278, 150.8931],
+        'hobart': [-42.8821, 147.3272],
+        
+        # Germany
+        'berlin': [52.5200, 13.4050],
+        'munich': [48.1351, 11.5820],
+        'hamburg': [53.5511, 9.9937],
+        'frankfurt': [50.1109, 8.6821],
+        'cologne': [50.9375, 6.9603],
+        'stuttgart': [48.7758, 9.1829],
+        'dusseldorf': [51.2277, 6.7735],
+        'dortmund': [51.5136, 7.4653],
+        
+        # France
+        'paris': [48.8566, 2.3522],
+        'marseille': [43.2965, 5.3698],
+        'lyon': [45.7640, 4.8357],
+        'toulouse': [43.6047, 1.4442],
+        'nice': [43.7102, 7.2620],
+        
+        # Netherlands
+        'amsterdam': [52.3676, 4.9041],
+        'rotterdam': [51.9244, 4.4777],
+        'the hague': [52.0705, 4.3007],
+        
+        # Spain
+        'madrid': [40.4168, -3.7038],
+        'barcelona': [41.3851, 2.1734],
+        'valencia': [39.4699, -0.3763],
+        'seville': [37.3891, -5.9845],
+        
+        # Italy
+        'rome': [41.9028, 12.4964],
+        'milan': [45.4642, 9.1900],
+        'naples': [40.8518, 14.2681],
+        
+        # Japan
+        'tokyo': [35.6762, 139.6503],
+        'osaka': [34.6937, 135.5023],
+        'kyoto': [35.0116, 135.7681],
+        
+        # Singapore
+        'singapore': [1.3521, 103.8198],
+        
+        # New Zealand
+        'auckland': [-36.8485, 174.7633],
+        'wellington': [-41.2865, 174.7762],
+        
+        # Ireland
+        'dublin': [53.3498, -6.2603],
+        
+        # Belgium
+        'brussels': [50.8503, 4.3517],
+        
+        # Switzerland
+        'zurich': [47.3769, 8.5417],
+        'geneva': [46.2044, 6.1432],
+        
+        # Sweden
+        'stockholm': [59.3293, 18.0686],
+        
+        # Norway
+        'oslo': [59.9139, 10.7522],
+        
+        # Denmark
+        'copenhagen': [55.6761, 12.5683],
+        
+        # Finland
+        'helsinki': [60.1699, 24.9384],
+        
+        # Austria
+        'vienna': [48.2082, 16.3738],
+        
+        # UAE
+        'dubai': [25.2048, 55.2708],
+        'abu dhabi': [24.4539, 54.3773],
+        
+        # Hong Kong
+        'hong kong': [22.3193, 114.1694],
+        
+        # China
+        'beijing': [39.9042, 116.4074],
+        'shanghai': [31.2304, 121.4737],
+        'guangzhou': [23.1291, 113.2644],
+        'shenzhen': [22.5431, 114.0579],
+        
+        # South Korea
+        'seoul': [37.5665, 126.9780],
+        'busan': [35.1796, 129.0756],
+        
+        # India
+        'mumbai': [19.0760, 72.8777],
+        'delhi': [28.7041, 77.1025],
+        'bangalore': [12.9716, 77.5946],
+        'chennai': [13.0827, 80.2707],
+        'kolkata': [22.5726, 88.3639],
+        
+        # Brazil
+        'são paulo': [-23.5505, -46.6333],
+        'rio de janeiro': [-22.9068, -43.1729],
+        
+        # Mexico
+        'mexico city': [19.4326, -99.1332],
+        
+        # Argentina
+        'buenos aires': [-34.6037, -58.3816],
+        
+        # South Africa
+        'johannesburg': [-26.2041, 28.0473],
+        'cape town': [-33.9249, 18.4241],
+        
+        # Israel
+        'tel aviv': [32.0853, 34.7818],
+        'jerusalem': [31.7683, 35.2137],
+        
+        # Turkey
+        'istanbul': [41.0082, 28.9784],
+        'ankara': [39.9334, 32.8597],
+        
+        # Russia
+        'moscow': [55.7558, 37.6173],
+        'saint petersburg': [59.9343, 30.3351],
     }
     
-    # Get city center or default to Mississauga
-    center = city_centers.get(location.lower(), city_centers['mississauga'])
+    # Get city center or default to New York
+    center = city_centers.get(location.lower(), city_centers['new york'])
     
     # Add small random offset
     import random
@@ -161,16 +354,234 @@ def validate_and_clean_rent_data(user_listing):
     return cleaned_listing, warnings
 
 def validate_location(location):
-    """Validate if location is a known Canadian city/town"""
-    valid_locations = {
-        'mississauga', 'toronto', 'vancouver', 'montreal', 'calgary', 'ottawa',
-        'brampton', 'hamilton', 'london', 'kitchener', 'waterloo', 'halifax',
-        'winnipeg', 'edmonton', 'victoria', 'quebec city', 'saskatoon',
-        'regina', 'st. john\'s', 'barrie', 'guelph', 'kingston', 'windsor'
+    """Validate if location is a known international city/town and return currency info"""
+    # International cities with their currencies
+    international_locations = {
+        # Canada
+        'mississauga': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'toronto': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'vancouver': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'montreal': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'calgary': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'ottawa': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'brampton': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'hamilton': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'london': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'kitchener': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'waterloo': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'halifax': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'winnipeg': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'edmonton': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'victoria': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'quebec city': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'saskatoon': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'regina': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'st. john\'s': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'barrie': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'guelph': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'kingston': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        'windsor': {'country': 'Canada', 'currency': 'CAD', 'symbol': 'C$'},
+        
+        # USA
+        'new york': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'los angeles': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'chicago': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'houston': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'phoenix': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'philadelphia': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'san antonio': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'san diego': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'dallas': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'san jose': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'austin': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'jacksonville': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'fort worth': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'columbus': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'charlotte': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'san francisco': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'indianapolis': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'seattle': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'denver': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'washington': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'boston': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'el paso': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'detroit': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'nashville': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'portland': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'memphis': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'oklahoma city': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'las vegas': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'louisville': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'milwaukee': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'albuquerque': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'tucson': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'fresno': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'sacramento': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'kansas city': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'long beach': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'mesa': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'atlanta': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'omaha': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'raleigh': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'miami': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'minneapolis': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'tampa': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'tulsa': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'arlington': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        'new orleans': {'country': 'USA', 'currency': 'USD', 'symbol': '$'},
+        
+        # UK
+        'london': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'manchester': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'birmingham': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'glasgow': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'leeds': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'sheffield': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'bristol': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'liverpool': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'edinburgh': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        'cardiff': {'country': 'UK', 'currency': 'GBP', 'symbol': '£'},
+        
+        # Australia
+        'sydney': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'melbourne': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'brisbane': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'perth': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'adelaide': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'gold coast': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'canberra': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'newcastle': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'wollongong': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        'hobart': {'country': 'Australia', 'currency': 'AUD', 'symbol': 'A$'},
+        
+        # Germany
+        'berlin': {'country': 'Germany', 'currency': 'EUR', 'symbol': '€'},
+        'munich': {'country': 'Germany', 'currency': 'EUR', 'symbol': '€'},
+        'hamburg': {'country': 'Germany', 'currency': 'EUR', 'symbol': '€'},
+        'frankfurt': {'country': 'Germany', 'currency': 'EUR', 'symbol': '€'},
+        'cologne': {'country': 'Germany', 'currency': 'EUR', 'symbol': '€'},
+        'stuttgart': {'country': 'Germany', 'currency': 'EUR', 'symbol': '€'},
+        'dusseldorf': {'country': 'Germany', 'currency': 'EUR', 'symbol': '€'},
+        'dortmund': {'country': 'Germany', 'currency': 'EUR', 'symbol': '€'},
+        
+        # France
+        'paris': {'country': 'France', 'currency': 'EUR', 'symbol': '€'},
+        'marseille': {'country': 'France', 'currency': 'EUR', 'symbol': '€'},
+        'lyon': {'country': 'France', 'currency': 'EUR', 'symbol': '€'},
+        'toulouse': {'country': 'France', 'currency': 'EUR', 'symbol': '€'},
+        'nice': {'country': 'France', 'currency': 'EUR', 'symbol': '€'},
+        
+        # Netherlands
+        'amsterdam': {'country': 'Netherlands', 'currency': 'EUR', 'symbol': '€'},
+        'rotterdam': {'country': 'Netherlands', 'currency': 'EUR', 'symbol': '€'},
+        'the hague': {'country': 'Netherlands', 'currency': 'EUR', 'symbol': '€'},
+        
+        # Spain
+        'madrid': {'country': 'Spain', 'currency': 'EUR', 'symbol': '€'},
+        'barcelona': {'country': 'Spain', 'currency': 'EUR', 'symbol': '€'},
+        'valencia': {'country': 'Spain', 'currency': 'EUR', 'symbol': '€'},
+        'seville': {'country': 'Spain', 'currency': 'EUR', 'symbol': '€'},
+        
+        # Italy
+        'rome': {'country': 'Italy', 'currency': 'EUR', 'symbol': '€'},
+        'milan': {'country': 'Italy', 'currency': 'EUR', 'symbol': '€'},
+        'naples': {'country': 'Italy', 'currency': 'EUR', 'symbol': '€'},
+        
+        # Japan
+        'tokyo': {'country': 'Japan', 'currency': 'JPY', 'symbol': '¥'},
+        'osaka': {'country': 'Japan', 'currency': 'JPY', 'symbol': '¥'},
+        'kyoto': {'country': 'Japan', 'currency': 'JPY', 'symbol': '¥'},
+        
+        # Singapore
+        'singapore': {'country': 'Singapore', 'currency': 'SGD', 'symbol': 'S$'},
+        
+        # New Zealand
+        'auckland': {'country': 'New Zealand', 'currency': 'NZD', 'symbol': 'NZ$'},
+        'wellington': {'country': 'New Zealand', 'currency': 'NZD', 'symbol': 'NZ$'},
+        
+        # Ireland
+        'dublin': {'country': 'Ireland', 'currency': 'EUR', 'symbol': '€'},
+        
+        # Belgium
+        'brussels': {'country': 'Belgium', 'currency': 'EUR', 'symbol': '€'},
+        
+        # Switzerland
+        'zurich': {'country': 'Switzerland', 'currency': 'CHF', 'symbol': 'CHF'},
+        'geneva': {'country': 'Switzerland', 'currency': 'CHF', 'symbol': 'CHF'},
+        
+        # Sweden
+        'stockholm': {'country': 'Sweden', 'currency': 'SEK', 'symbol': 'SEK'},
+        
+        # Norway
+        'oslo': {'country': 'Norway', 'currency': 'NOK', 'symbol': 'NOK'},
+        
+        # Denmark
+        'copenhagen': {'country': 'Denmark', 'currency': 'DKK', 'symbol': 'DKK'},
+        
+        # Finland
+        'helsinki': {'country': 'Finland', 'currency': 'EUR', 'symbol': '€'},
+        
+        # Austria
+        'vienna': {'country': 'Austria', 'currency': 'EUR', 'symbol': '€'},
+        
+        # UAE
+        'dubai': {'country': 'UAE', 'currency': 'AED', 'symbol': 'AED'},
+        'abu dhabi': {'country': 'UAE', 'currency': 'AED', 'symbol': 'AED'},
+        
+        # Hong Kong
+        'hong kong': {'country': 'Hong Kong', 'currency': 'HKD', 'symbol': 'HK$'},
+        
+        # China
+        'beijing': {'country': 'China', 'currency': 'CNY', 'symbol': '¥'},
+        'shanghai': {'country': 'China', 'currency': 'CNY', 'symbol': '¥'},
+        'guangzhou': {'country': 'China', 'currency': 'CNY', 'symbol': '¥'},
+        'shenzhen': {'country': 'China', 'currency': 'CNY', 'symbol': '¥'},
+        
+        # South Korea
+        'seoul': {'country': 'South Korea', 'currency': 'KRW', 'symbol': '₩'},
+        'busan': {'country': 'South Korea', 'currency': 'KRW', 'symbol': '₩'},
+        
+        # India
+        'mumbai': {'country': 'India', 'currency': 'INR', 'symbol': '₹'},
+        'delhi': {'country': 'India', 'currency': 'INR', 'symbol': '₹'},
+        'bangalore': {'country': 'India', 'currency': 'INR', 'symbol': '₹'},
+        'chennai': {'country': 'India', 'currency': 'INR', 'symbol': '₹'},
+        'kolkata': {'country': 'India', 'currency': 'INR', 'symbol': '₹'},
+        
+        # Brazil
+        'são paulo': {'country': 'Brazil', 'currency': 'BRL', 'symbol': 'R$'},
+        'rio de janeiro': {'country': 'Brazil', 'currency': 'BRL', 'symbol': 'R$'},
+        
+        # Mexico
+        'mexico city': {'country': 'Mexico', 'currency': 'MXN', 'symbol': 'MX$'},
+        
+        # Argentina
+        'buenos aires': {'country': 'Argentina', 'currency': 'ARS', 'symbol': 'ARS$'},
+        
+        # South Africa
+        'johannesburg': {'country': 'South Africa', 'currency': 'ZAR', 'symbol': 'R'},
+        'cape town': {'country': 'South Africa', 'currency': 'ZAR', 'symbol': 'R'},
+        
+        # Israel
+        'tel aviv': {'country': 'Israel', 'currency': 'ILS', 'symbol': '₪'},
+        'jerusalem': {'country': 'Israel', 'currency': 'ILS', 'symbol': '₪'},
+        
+        # Turkey
+        'istanbul': {'country': 'Turkey', 'currency': 'TRY', 'symbol': '₺'},
+        'ankara': {'country': 'Turkey', 'currency': 'TRY', 'symbol': '₺'},
+        
+        # Russia
+        'moscow': {'country': 'Russia', 'currency': 'RUB', 'symbol': '₽'},
+        'saint petersburg': {'country': 'Russia', 'currency': 'RUB', 'symbol': '₽'},
     }
     
     location_lower = location.lower().strip()
-    return location_lower in valid_locations, location_lower
+    
+    if location_lower in international_locations:
+        return True, international_locations[location_lower]
+    else:
+        # Default to USD for unknown locations
+        return False, {'country': 'Unknown', 'currency': 'USD', 'symbol': '$'}
 
 def validate_address_format(address, location):
     """Basic address format validation"""
@@ -450,14 +861,19 @@ def analyze_rent():
         cleaned_listing, data_warnings = validate_and_clean_rent_data(user_listing)
         
         # Validate location
-        is_valid_location, normalized_location = validate_location(cleaned_listing['location'])
+        is_valid_location, location_info = validate_location(cleaned_listing['location'])
         location_warnings = []
         
         if not is_valid_location:
-            location_warnings.append(f"Location '{cleaned_listing['location']}' is not a recognized Canadian city/town")
-            # Default to Mississauga for analysis
-            cleaned_listing['location'] = 'Mississauga'
-            normalized_location = 'mississauga'
+            location_warnings.append(f"Location '{cleaned_listing['location']}' is not a recognized international city. Using {location_info['country']} with {location_info['currency']} currency for analysis.")
+            # Use the provided location but with default currency info
+        else:
+            location_warnings.append(f"Analyzing property in {location_info['country']} using {location_info['currency']} currency.")
+        
+        # Add currency info to cleaned listing
+        cleaned_listing['currency'] = location_info['currency']
+        cleaned_listing['currency_symbol'] = location_info['symbol']
+        cleaned_listing['country'] = location_info['country']
         
         # Validate address format
         address_valid, address_message = validate_address_format(cleaned_listing['address'], cleaned_listing['location'])
@@ -489,7 +905,7 @@ def analyze_rent():
         # Generate AI explanation with cleaned data
         ai_explanation = generate_ai_explanation(cleaned_listing, fairness_result, comparables)
         
-        # Prepare response with warnings
+        # Prepare response with warnings and currency info
         response = {
             "user_listing": cleaned_listing,
             "fairness_result": fairness_result,
@@ -505,6 +921,11 @@ def analyze_rent():
                 "has_warnings": len(all_warnings) > 0,
                 "warning_count": len(all_warnings),
                 "data_cleaned": user_listing != cleaned_listing
+            },
+            "currency_info": {
+                "currency": location_info['currency'],
+                "symbol": location_info['symbol'],
+                "country": location_info['country']
             }
         }
         
