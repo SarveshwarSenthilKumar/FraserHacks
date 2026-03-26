@@ -20,23 +20,28 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'YOUR_GEMINI_API_KEY')
 if GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY':
     genai.configure(api_key=GEMINI_API_KEY)
 
-# Sample rental data - in a real app, this would come from Gemini API
+# Sample rental data - more diverse and realistic market data
 SAMPLE_LISTINGS = [
-    {"price": 2200, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 850, "address": "123 Queen St E"},
-    {"price": 2400, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 900, "address": "456 King St W"},
-    {"price": 2100, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 800, "address": "789 Dundas St E"},
-    {"price": 2600, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 1000, "address": "321 Yonge St"},
-    {"price": 2300, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 875, "address": "654 Bloor St"},
-    {"price": 2500, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 950, "address": "987 College St"},
-    {"price": 2150, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 825, "address": "147 Spadina Ave"},
-    {"price": 2450, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 925, "address": "258 Queen St W"},
-    {"price": 2250, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 860, "address": "369 King St E"},
-    {"price": 2350, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 890, "address": "741 Dundas St W"},
-    {"price": 2800, "bedrooms": 3, "bathrooms": 2, "location": "Mississauga", "sqft": 1200, "address": "852 Yonge St"},
-    {"price": 1900, "bedrooms": 1, "bathrooms": 1, "location": "Mississauga", "sqft": 650, "address": "963 Bloor St W"},
-    {"price": 3200, "bedrooms": 3, "bathrooms": 2, "location": "Mississauga", "sqft": 1100, "address": "159 College St W"},
-    {"price": 2000, "bedrooms": 1, "bathrooms": 1, "location": "Mississauga", "sqft": 600, "address": "753 Spadina Rd"},
-    {"price": 2900, "bedrooms": 3, "bathrooms": 2, "location": "Mississauga", "sqft": 1150, "address": "951 Queen St E"},
+    {"price": 1800, "bedrooms": 1, "bathrooms": 1, "location": "Mississauga", "sqft": 650, "address": "123 Queen St E"},
+    {"price": 1650, "bedrooms": 1, "bathrooms": 1, "location": "Mississauga", "sqft": 600, "address": "456 King St W"},
+    {"price": 1950, "bedrooms": 1, "bathrooms": 1, "location": "Mississauga", "sqft": 700, "address": "789 Dundas St E"},
+    {"price": 2200, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 850, "address": "321 Yonge St"},
+    {"price": 2400, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 900, "address": "654 Bloor St"},
+    {"price": 2100, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 800, "address": "987 College St"},
+    {"price": 2600, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 1000, "address": "147 Spadina Ave"},
+    {"price": 2300, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 875, "address": "258 Queen St W"},
+    {"price": 3200, "bedrooms": 3, "bathrooms": 2, "location": "Mississauga", "sqft": 1200, "address": "852 Yonge St"},
+    {"price": 3500, "bedrooms": 3, "bathrooms": 2, "location": "Mississauga", "sqft": 1400, "address": "963 Bloor St W"},
+    {"price": 2900, "bedrooms": 3, "bathrooms": 2, "location": "Mississauga", "sqft": 1100, "address": "159 College St W"},
+    {"price": 3100, "bedrooms": 3, "bathrooms": 3, "location": "Mississauga", "sqft": 1300, "address": "753 Spadina Rd"},
+    {"price": 2800, "bedrooms": 3, "bathrooms": 2, "location": "Mississauga", "sqft": 1150, "address": "951 Queen St E"},
+    {"price": 3800, "bedrooms": 3, "bathrooms": 3, "location": "Mississauga", "sqft": 1500, "address": "741 Dundas St W"},
+    {"price": 2500, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 950, "address": "369 King St E"},
+    {"price": 2750, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 1050, "address": "147 Queen St W"},
+    {"price": 2250, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 860, "address": "258 King St E"},
+    {"price": 2450, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 925, "address": "369 Dundas St W"},
+    {"price": 2000, "bedrooms": 1, "bathrooms": 1, "location": "Mississauga", "sqft": 680, "address": "741 Yonge St"},
+    {"price": 1750, "bedrooms": 1, "bathrooms": 1, "location": "Mississauga", "sqft": 620, "address": "852 Bloor St"},
 ]
 
 def generate_simple_coordinates(address, location):
@@ -582,32 +587,37 @@ def generate_comparable_listings_gemini(user_listing):
             return SAMPLE_LISTINGS
         
         prompt = f"""
-        Generate 10 realistic rental listings comparable to the following property in {user_listing['location']}:
+        Generate 10 REALISTIC rental listings for {user_listing['location']}. 
+        DO NOT base these on the user's input - generate genuine market data.
         
-        Target Property:
-        - Price: ${user_listing['price']}/month
-        - Bedrooms: {user_listing['bedrooms']}
-        - Bathrooms: {user_listing['bathrooms']}
-        - Location: {user_listing['location']}
-        - Square Feet: {user_listing['sqft']}
+        Location: {user_listing['location']}
         
-        Please generate 10 comparable rental listings with realistic variations in price (±20%), 
-        similar bedroom/bathroom counts, and realistic addresses in {user_listing['location']}.
+        Generate 10 authentic rental listings that represent the actual rental market in {user_listing['location']}. 
+        Include a variety of properties with different price points, sizes, and configurations.
+        
+        Requirements:
+        - Mix of 1, 2, and 3 bedroom properties
+        - Price range should reflect the actual market in {user_listing['location']}
+        - Square footage should be realistic for each bedroom count
+        - Addresses should be realistic street names in {user_listing['location']}
+        - DO NOT make all properties similar to each other
+        - Include both cheaper and more expensive options
+        - Make the data look like real rental listings
         
         Format each listing as a JSON object with these exact keys:
-        - price: monthly rent as number
-        - bedrooms: number of bedrooms as number  
-        - bathrooms: number of bathrooms as number
+        - price: monthly rent as number (realistic for the area)
+        - bedrooms: number of bedrooms as number (vary between 1-3)
+        - bathrooms: number of bathrooms as number (realistic for bedroom count)
         - location: "{user_listing['location']}"
-        - sqft: square footage as number
+        - sqft: square footage as number (realistic for the property size)
         - address: realistic street address in {user_listing['location']}
         - listing_url: MUST be a valid, complete URL starting with https:// (use real estate websites like zillow.com, realtor.ca, apartments.com, or zumper.com)
         
-        IMPORTANT: The listing_url MUST be a complete, valid URL that starts with "https://". 
-        Examples of good URLs:
-        - "https://www.zillow.com/homedetails/123-Main-St-example-address/"
-        - "https://www.realtor.ca/real-estate/example-address"
-        - "https://www.apartments.com/example-address"
+        IMPORTANT: 
+        - DO NOT cater to any specific price range
+        - DO NOT make all properties similar
+        - Create a diverse, realistic market sample
+        - The listing_url MUST be a complete, valid URL that starts with "https://"
         
         Return only a valid JSON array of 10 listing objects. No additional text or markdown formatting.
         """
@@ -646,7 +656,7 @@ def generate_comparable_listings_gemini(user_listing):
         return SAMPLE_LISTINGS
 
 def find_comparables(user_listing, all_listings):
-    """Find comparable listings based on location, bedrooms, and property type"""
+    """Find comparable listings based on location and property type"""
     comparables = []
     
     for listing in all_listings:
@@ -654,15 +664,29 @@ def find_comparables(user_listing, all_listings):
         if listing["location"].lower() != user_listing["location"].lower():
             continue
             
-        # Same bedroom count or ±1
-        if abs(listing["bedrooms"] - user_listing["bedrooms"]) > 1:
+        # More flexible bedroom matching (±2 bedrooms for better market representation)
+        if abs(listing["bedrooms"] - user_listing["bedrooms"]) > 2:
             continue
             
-        # Similar bathroom count (±1)
-        if abs(listing["bathrooms"] - user_listing["bathrooms"]) > 1:
+        # Similar bathroom count (±2 for more flexibility)
+        if abs(listing["bathrooms"] - user_listing["bathrooms"]) > 2:
             continue
             
         comparables.append(listing)
+    
+    # If we don't have enough comparables, be even more flexible
+    if len(comparables) < 5:
+        comparables = []
+        for listing in all_listings:
+            # Same location
+            if listing["location"].lower() != user_listing["location"].lower():
+                continue
+                
+            # Very flexible bedroom matching (±3 bedrooms)
+            if abs(listing["bedrooms"] - user_listing["bedrooms"]) > 3:
+                continue
+                
+            comparables.append(listing)
     
     return comparables
 
@@ -731,13 +755,29 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
             - **Average Market Price:** ${fairness_result.get('mean_price', 0):.0f}
             
             ## EXPLOITATION DETECTION REQUIRED
-            IMPORTANT: Analyze for potential exploitation signs including:
-            - Price significantly (>50%) above market average for similar properties
-            - Unusually high price per square foot compared to area standards
-    - Suspicious pricing patterns that may target vulnerable renters
-    - Any red flags that suggest predatory pricing practices
-    
-            If you detect ANY signs of potential exploitation, start your response with "⚠️ EXPLOITATION ALERT:" followed by specific details.
+            CRITICAL: Only flag for exploitation in CLEAR and OBVIOUS cases. Do not over-detect.
+            
+            Look for CLEAR exploitation signs including:
+            - Price extremely (>75%) above market average for similar properties
+            - Extremely high price per square foot (>$8) compared to area standards
+            - Obvious predatory pricing patterns that clearly target vulnerable renters
+            - CLEAR red flags that suggest undeniable predatory pricing practices
+            - Multiple random or nonsensical input data that clearly indicates testing/bypass attempts
+            - Completely inconsistent property details (e.g., luxury pricing for basic amenities with no justification)
+            - Extremely unusual bedroom/bathroom to price ratios that clearly don't match market norms
+            - Location pricing that clearly doesn't align with the area's typical cost of living
+            
+            USER INPUT VALIDATION: Only flag for CLEAR system abuse:
+            - Multiple random numbers or completely unrealistic property details
+            - Obvious test inputs designed to probe the system
+            - Clear malicious attempts to break the analysis
+            - Completely inconsistent or contradictory information
+            
+            IMPORTANT: Only trigger exploitation alert if you see MULTIPLE clear signs or ONE extremely obvious sign.
+            Normal high prices, expensive properties, or luxury listings should NOT be flagged as exploitation.
+            Edge cases and borderline situations should be treated as normal market variations.
+            
+            If you detect CLEAR and OBVIOUS signs of exploitation or system abuse, start your response with "⚠️ EXPLOITATION ALERT:" followed by specific details.
             
             Please provide a comprehensive analysis using markdown formatting:
             
@@ -812,16 +852,43 @@ def get_detailed_fallback_explanation(user_listing, fairness_result, comparables
     # Calculate price per square foot
     price_per_sqft = user_listing['price'] / user_listing['sqft'] if user_listing['sqft'] and user_listing['sqft'] > 0 else 0
     
-    # Exploitation detection criteria
-    if percent_above_market > 50:
+    # Suspicious input detection (only clear test patterns)
+    suspicious_inputs = []
+    
+    # Check for obvious test patterns only
+    if user_listing['price'] in [123, 456, 789, 999] and user_listing['sqft'] in [123, 456, 789, 999]:
+        suspicious_inputs.append("Both price and square footage appear to be test patterns")
+    
+    # Check for clearly unrealistic property combinations
+    if user_listing['bedrooms'] == 1 and user_listing['price'] > 10000:
+        suspicious_inputs.append("Extremely high price for 1-bedroom property")
+    
+    if user_listing['bedrooms'] > 8 and user_listing['sqft'] < 500:
+        suspicious_inputs.append("Completely unrealistic bedroom-to-square-foot ratio")
+    
+    if user_listing['bathrooms'] > user_listing['bedrooms'] + 3:
+        suspicious_inputs.append("Extremely unusual bathroom-to-bedroom ratio")
+    
+    # Check for obvious fake addresses only
+    if user_listing['address']:
+        address_lower = user_listing['address'].lower()
+        obvious_fake_addresses = ['test street', 'fake address', '123 fake']
+        if any(fake_addr in address_lower for fake_addr in obvious_fake_addresses):
+            suspicious_inputs.append("Address appears to be obviously fake")
+    
+    # Exploitation detection criteria (much more conservative)
+    if percent_above_market > 75:  # Increased from 50%
         exploitation_detected = True
         exploitation_alert = f"This property is priced {percent_above_market:.1f}% above market average, which may indicate exploitative pricing targeting vulnerable renters."
-    elif price_per_sqft > 5 and user_listing['location'].lower() in ['mississauga', 'toronto', 'vancouver']:
+    elif price_per_sqft > 8 and user_listing['location'].lower() in ['mississauga', 'toronto', 'vancouver']:  # Increased from 5
         exploitation_detected = True
         exploitation_alert = f"The price per square foot (${price_per_sqft:.2f}) is unusually high for {user_listing['location']}, suggesting potential predatory pricing."
-    elif user_listing['price'] > avg_price * 2 and len(comparables) >= 5:
+    elif user_listing['price'] > avg_price * 3 and len(comparables) >= 5:  # Increased from 2x
         exploitation_detected = True
-        exploitation_alert = f"This rental price is more than double the market average based on {len(comparables)} comparable properties, indicating possible exploitation."
+        exploitation_alert = f"This rental price is more than triple the market average based on {len(comparables)} comparable properties, indicating possible exploitation."
+    elif len(suspicious_inputs) >= 2:  # Require multiple suspicious patterns
+        exploitation_detected = True
+        exploitation_alert = f"Multiple suspicious input patterns detected: {', '.join(suspicious_inputs)}. This may indicate system probing or test attempts."
     
     # Determine market position
     score = fairness_result.get('score', 0)
@@ -870,7 +937,7 @@ def get_detailed_fallback_explanation(user_listing, fairness_result, comparables
 def get_fallback_explanation(user_listing, fairness_result, comparables):
     """Fallback explanation when Gemini API is not available"""
     
-    # Basic exploitation detection
+    # Basic exploitation detection (very conservative)
     exploitation_detected = False
     exploitation_alert = ""
     
@@ -878,7 +945,8 @@ def get_fallback_explanation(user_listing, fairness_result, comparables):
         avg_price = statistics.mean([comp['price'] for comp in comparables])
         percent_above_market = ((user_listing['price'] - avg_price) / avg_price) * 100 if avg_price > 0 else 0
         
-        if percent_above_market > 50:
+        # Only flag for extreme cases
+        if percent_above_market > 75:  # Increased from 50%
             exploitation_detected = True
             exploitation_alert = f"This property is priced {percent_above_market:.1f}% above market average, which may indicate exploitative pricing."
     

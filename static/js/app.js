@@ -189,39 +189,61 @@ function showExploitationAlert(alertMessage) {
     if (!alertDiv) {
         alertDiv = document.createElement('div');
         alertDiv.id = 'exploitationAlert';
-        alertDiv.className = 'fixed top-4 right-4 bg-red-600 text-white px-6 py-4 rounded-lg shadow-xl z-50 transform translate-x-full transition-transform duration-300 max-w-md';
+        alertDiv.className = 'fixed top-4 right-4 bg-red-600 text-white px-6 py-4 rounded-lg shadow-2xl z-50 transform translate-x-full transition-all duration-300 max-w-md border-2 border-red-400';
         document.body.appendChild(alertDiv);
     }
     
     alertDiv.innerHTML = `
         <div class="flex items-start">
-            <div class="flex-shrink-0">
-                <i class="fas fa-exclamation-triangle text-2xl text-yellow-300"></i>
+            <div class="flex-shrink-0 animate-pulse">
+                <i class="fas fa-exclamation-triangle text-3xl text-yellow-300"></i>
             </div>
             <div class="ml-3 flex-1">
-                <h3 class="text-lg font-bold text-white">⚠️ EXPLOITATION ALERT</h3>
-                <p class="mt-1 text-sm text-red-100">${alertMessage}</p>
-                <div class="mt-2">
+                <h3 class="text-lg font-bold text-white flex items-center">
+                    <span class="animate-pulse">⚠️</span> EXPLOITATION ALERT
+                </h3>
+                <p class="mt-2 text-sm text-red-100">${alertMessage}</p>
+                <div class="mt-3 p-2 bg-red-700 rounded border border-red-500">
+                    <p class="text-xs text-red-200 font-medium">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Our system has detected potentially exploitative pricing or suspicious input patterns. Please exercise extreme caution and verify all details independently.
+                    </p>
+                </div>
+                <div class="mt-3 flex space-x-2">
                     <button onclick="this.closest('#exploitationAlert').remove()" 
                             class="bg-red-700 hover:bg-red-800 text-white text-xs font-medium px-3 py-1 rounded transition-colors">
-                        Dismiss
+                        <i class="fas fa-times mr-1"></i> Dismiss
+                    </button>
+                    <button onclick="window.open('https://www.consumerprotection.gov', '_blank')" 
+                            class="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium px-3 py-1 rounded transition-colors">
+                        <i class="fas fa-external-link-alt mr-1"></i> Report
                     </button>
                 </div>
             </div>
             <button onclick="this.closest('#exploitationAlert').remove()" 
-                    class="ml-3 text-red-200 hover:text-white transition-colors">
+                    class="ml-3 text-red-200 hover:text-white transition-colors text-xl">
                 <i class="fas fa-times"></i>
             </button>
         </div>
     `;
     
-    // Show alert with slide-in animation and pulse effect
+    // Show alert with slide-in animation and strong pulse effect
     setTimeout(() => {
         alertDiv.style.transform = 'translateX(0)';
         alertDiv.classList.add('animate-pulse');
+        
+        // Add sound effect (optional - using a data URI for a simple beep)
+        try {
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+            audio.volume = 0.3;
+            audio.play().catch(() => {}); // Ignore errors if audio is blocked
+        } catch (e) {}
     }, 100);
     
-    // Auto-hide after 10 seconds (longer than regular errors)
+    // Add multiple visual warnings throughout the interface
+    addExploitationWarnings();
+    
+    // Auto-hide after 15 seconds (longer for serious alerts)
     setTimeout(() => {
         if (alertDiv && alertDiv.parentNode) {
             alertDiv.style.transform = 'translateX(100%)';
@@ -231,17 +253,79 @@ function showExploitationAlert(alertMessage) {
                 }
             }, 300);
         }
-    }, 10000);
+    }, 15000);
     
-    // Add red border to results section to indicate warning
+    // Add persistent warning banner
+    addWarningBanner();
+}
+
+function addExploitationWarnings() {
+    // Add red border and warning overlay to results section
     const resultsSection = document.getElementById('resultsSection');
     if (resultsSection) {
-        resultsSection.classList.add('border-4', 'border-red-500');
-        // Remove border after 15 seconds
-        setTimeout(() => {
-            resultsSection.classList.remove('border-4', 'border-red-500');
-        }, 15000);
+        resultsSection.classList.add('border-4', 'border-red-500', 'relative');
+        
+        // Add warning overlay
+        const warningOverlay = document.createElement('div');
+        warningOverlay.className = 'absolute top-0 left-0 right-0 bg-red-600 text-white px-4 py-2 text-center font-bold text-sm z-10';
+        warningOverlay.innerHTML = `
+            <i class="fas fa-exclamation-triangle mr-2 animate-pulse"></i>
+            ⚠️ EXPLOITATION DETECTED - VERIFY ALL INFORMATION INDEPENDENTLY ⚠️
+        `;
+        resultsSection.insertBefore(warningOverlay, resultsSection.firstChild);
+        
+        // Add warning class to all price displays
+        const priceElements = resultsSection.querySelectorAll('[id*="price"], [id*="Price"], .text-2xl');
+        priceElements.forEach(el => {
+            if (el.textContent.includes('$')) {
+                el.classList.add('text-red-600', 'font-bold', 'animate-pulse');
+            }
+        });
     }
+    
+    // Add warning to fairness indicator
+    const fairnessIndicator = document.getElementById('fairnessIndicator');
+    if (fairnessIndicator) {
+        const warningBadge = document.createElement('div');
+        warningBadge.className = 'absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold animate-pulse';
+        warningBadge.innerHTML = '!';
+        fairnessIndicator.appendChild(warningBadge);
+        fairnessIndicator.classList.add('relative');
+    }
+}
+
+function addWarningBanner() {
+    // Add persistent warning banner at the top of the page
+    const banner = document.createElement('div');
+    banner.id = 'exploitationBanner';
+    banner.className = 'fixed top-0 left-0 right-0 bg-red-700 text-white px-4 py-3 text-center z-40 transform -translate-y-full transition-transform duration-500';
+    banner.innerHTML = `
+        <div class="flex items-center justify-center max-w-4xl mx-auto">
+            <i class="fas fa-shield-alt text-2xl mr-3 animate-pulse"></i>
+            <div class="flex-1">
+                <p class="font-bold">⚠️ SECURITY ALERT - POTENTIAL EXPLOITATION DETECTED</p>
+                <p class="text-sm text-red-200">Please verify all rental details independently and consider reporting suspicious listings</p>
+            </div>
+            <button onclick="this.closest('#exploitationBanner').remove()" class="ml-4 text-red-200 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(banner);
+    
+    // Slide down the banner
+    setTimeout(() => {
+        banner.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // Remove after 20 seconds
+    setTimeout(() => {
+        if (banner.parentNode) {
+            banner.style.transform = 'translateY(-100%)';
+            setTimeout(() => banner.remove(), 500);
+        }
+    }, 20000);
 }
 
 function showError(message) {
@@ -292,6 +376,7 @@ function displayResults(data) {
     // Check for exploitation detection FIRST
     if (ai_explanation && ai_explanation.exploitation_detected) {
         showExploitationAlert(ai_explanation.exploitation_alert);
+        showExploitationAlertSection(ai_explanation.exploitation_alert);
         // Still show results but with prominent warning
     }
     
@@ -328,6 +413,24 @@ function displayResults(data) {
     
     // Scroll to results
     document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showExploitationAlertSection(alertMessage) {
+    const alertSection = document.getElementById('exploitationAlertSection');
+    const messageElement = document.getElementById('exploitationAlertMessage');
+    
+    if (alertSection && messageElement) {
+        messageElement.textContent = alertMessage;
+        alertSection.classList.remove('hidden');
+        
+        // Add animation classes
+        alertSection.classList.add('animate-pulse', 'border-4', 'border-red-500');
+        
+        // Scroll to the alert
+        setTimeout(() => {
+            alertSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
 }
 
 function displayCurrencyInfo(currency_info) {
