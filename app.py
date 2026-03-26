@@ -715,7 +715,7 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
         if GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY':
             # Create prompt for AI explanation
             prompt = f"""
-            Analyze this rental property and provide negotiation advice in **markdown format**:
+            Analyze this rental property for potential exploitation signs and provide negotiation advice in **markdown format**:
             
             ## Property Details
             - **Price:** ${user_listing['price']}/month
@@ -729,6 +729,15 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
             - **Market Label:** {fairness_result['label']}
             - **Comparable Properties:** {len(comparables)}
             - **Average Market Price:** ${fairness_result.get('mean_price', 0):.0f}
+            
+            ## EXPLOITATION DETECTION REQUIRED
+            IMPORTANT: Analyze for potential exploitation signs including:
+            - Price significantly (>50%) above market average for similar properties
+            - Unusually high price per square foot compared to area standards
+    - Suspicious pricing patterns that may target vulnerable renters
+    - Any red flags that suggest predatory pricing practices
+    
+            If you detect ANY signs of potential exploitation, start your response with "⚠️ EXPLOITATION ALERT:" followed by specific details.
             
             Please provide a comprehensive analysis using markdown formatting:
             
@@ -745,6 +754,9 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
             response = model.generate_content(prompt)
             response_text = response.text
             
+            # Check for exploitation alert
+            exploitation_detected = "⚠️ EXPLOITATION ALERT:" in response_text
+            
             # Parse the response
             if '### Market Analysis' in response_text and '### Negotiation Strategy' in response_text:
                 # Extract content between markdown headers
@@ -753,7 +765,9 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
                 
                 return {
                     "explanation": explanation_part,
-                    "negotiation_tips": tips_part
+                    "negotiation_tips": tips_part,
+                    "exploitation_detected": exploitation_detected,
+                    "exploitation_alert": response_text.split('⚠️ EXPLOITATION ALERT:')[1].split('###')[0].strip() if exploitation_detected else None
                 }
             elif 'EXPLANATION:' in response_text and 'TIPS:' in response_text:
                 # Fallback to old format parsing
@@ -762,7 +776,9 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
                 
                 return {
                     "explanation": explanation_part,
-                    "negotiation_tips": tips_part
+                    "negotiation_tips": tips_part,
+                    "exploitation_detected": exploitation_detected,
+                    "exploitation_alert": response_text.split('⚠️ EXPLOITATION ALERT:')[1].split('EXPLANATION:')[0].strip() if exploitation_detected else None
                 }
         
         # Fallback to detailed explanation if API fails
@@ -786,6 +802,27 @@ def get_detailed_fallback_explanation(user_listing, fairness_result, comparables
         median_price = user_listing['price']
         price_range = f"${user_listing['price']:.0f}"
     
+    # Check for exploitation signs
+    exploitation_detected = False
+    exploitation_alert = ""
+    
+    # Calculate percentage above market
+    percent_above_market = ((user_listing['price'] - avg_price) / avg_price) * 100 if avg_price > 0 else 0
+    
+    # Calculate price per square foot
+    price_per_sqft = user_listing['price'] / user_listing['sqft'] if user_listing['sqft'] and user_listing['sqft'] > 0 else 0
+    
+    # Exploitation detection criteria
+    if percent_above_market > 50:
+        exploitation_detected = True
+        exploitation_alert = f"This property is priced {percent_above_market:.1f}% above market average, which may indicate exploitative pricing targeting vulnerable renters."
+    elif price_per_sqft > 5 and user_listing['location'].lower() in ['mississauga', 'toronto', 'vancouver']:
+        exploitation_detected = True
+        exploitation_alert = f"The price per square foot (${price_per_sqft:.2f}) is unusually high for {user_listing['location']}, suggesting potential predatory pricing."
+    elif user_listing['price'] > avg_price * 2 and len(comparables) >= 5:
+        exploitation_detected = True
+        exploitation_alert = f"This rental price is more than double the market average based on {len(comparables)} comparable properties, indicating possible exploitation."
+    
     # Determine market position
     score = fairness_result.get('score', 0)
     if score > 10:
@@ -808,7 +845,7 @@ def get_detailed_fallback_explanation(user_listing, fairness_result, comparables
     is listed at **${user_listing['price']}/month**, which is {market_position}. Based on our analysis of {len(comparables)} comparable listings 
     in the area, the market average is **${avg_price:.0f}** with properties ranging from {price_range}.
     
-    The price per square foot of **${user_listing['price'] / user_listing['sqft'] if user_listing['sqft'] else 0:.2f}** 
+    The price per square foot of **${price_per_sqft:.2f}** 
     {'is competitive' if abs(score) <= 5 else 'offers good value' if score < -5 else 'requires market adjustment'}.
     
     {market_position.capitalize()} positioning provides you {strategy}.
@@ -825,11 +862,25 @@ def get_detailed_fallback_explanation(user_listing, fairness_result, comparables
     
     return {
         "explanation": explanation.strip(),
-        "negotiation_tips": tips.strip()
+        "negotiation_tips": tips.strip(),
+        "exploitation_detected": exploitation_detected,
+        "exploitation_alert": exploitation_alert
     }
 
 def get_fallback_explanation(user_listing, fairness_result, comparables):
     """Fallback explanation when Gemini API is not available"""
+    
+    # Basic exploitation detection
+    exploitation_detected = False
+    exploitation_alert = ""
+    
+    if comparables:
+        avg_price = statistics.mean([comp['price'] for comp in comparables])
+        percent_above_market = ((user_listing['price'] - avg_price) / avg_price) * 100 if avg_price > 0 else 0
+        
+        if percent_above_market > 50:
+            exploitation_detected = True
+            exploitation_alert = f"This property is priced {percent_above_market:.1f}% above market average, which may indicate exploitative pricing."
     
     explanation = f"""
     This {user_listing['bedrooms']}-bedroom, {user_listing['bathrooms']}-bathroom listing in {user_listing['location']} 
@@ -852,7 +903,9 @@ def get_fallback_explanation(user_listing, fairness_result, comparables):
     
     return {
         "explanation": explanation.strip(),
-        "negotiation_tips": negotiation_tips.strip()
+        "negotiation_tips": negotiation_tips.strip(),
+        "exploitation_detected": exploitation_detected,
+        "exploitation_alert": exploitation_alert
     }
 
 @app.route('/')

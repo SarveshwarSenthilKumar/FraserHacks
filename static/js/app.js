@@ -183,6 +183,67 @@ function hideLoadingState() {
     form.style.pointerEvents = 'auto';
 }
 
+function showExploitationAlert(alertMessage) {
+    // Create or update exploitation alert notification
+    let alertDiv = document.getElementById('exploitationAlert');
+    if (!alertDiv) {
+        alertDiv = document.createElement('div');
+        alertDiv.id = 'exploitationAlert';
+        alertDiv.className = 'fixed top-4 right-4 bg-red-600 text-white px-6 py-4 rounded-lg shadow-xl z-50 transform translate-x-full transition-transform duration-300 max-w-md';
+        document.body.appendChild(alertDiv);
+    }
+    
+    alertDiv.innerHTML = `
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-2xl text-yellow-300"></i>
+            </div>
+            <div class="ml-3 flex-1">
+                <h3 class="text-lg font-bold text-white">⚠️ EXPLOITATION ALERT</h3>
+                <p class="mt-1 text-sm text-red-100">${alertMessage}</p>
+                <div class="mt-2">
+                    <button onclick="this.closest('#exploitationAlert').remove()" 
+                            class="bg-red-700 hover:bg-red-800 text-white text-xs font-medium px-3 py-1 rounded transition-colors">
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+            <button onclick="this.closest('#exploitationAlert').remove()" 
+                    class="ml-3 text-red-200 hover:text-white transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    // Show alert with slide-in animation and pulse effect
+    setTimeout(() => {
+        alertDiv.style.transform = 'translateX(0)';
+        alertDiv.classList.add('animate-pulse');
+    }, 100);
+    
+    // Auto-hide after 10 seconds (longer than regular errors)
+    setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+            alertDiv.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 300);
+        }
+    }, 10000);
+    
+    // Add red border to results section to indicate warning
+    const resultsSection = document.getElementById('resultsSection');
+    if (resultsSection) {
+        resultsSection.classList.add('border-4', 'border-red-500');
+        // Remove border after 15 seconds
+        setTimeout(() => {
+            resultsSection.classList.remove('border-4', 'border-red-500');
+        }, 15000);
+    }
+}
+
 function showError(message) {
     // Create or update error notification
     let errorDiv = document.getElementById('errorNotification');
@@ -227,6 +288,12 @@ function animateSuccess() {
 
 function displayResults(data) {
     const { user_listing, fairness_result, comparables, ai_explanation, price_distribution, warnings, data_quality, currency_info } = data;
+    
+    // Check for exploitation detection FIRST
+    if (ai_explanation && ai_explanation.exploitation_detected) {
+        showExploitationAlert(ai_explanation.exploitation_alert);
+        // Still show results but with prominent warning
+    }
     
     // Display currency info if available
     if (currency_info) {
