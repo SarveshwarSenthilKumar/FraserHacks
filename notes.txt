@@ -1,7 +1,6 @@
 
 update the footer
 fix deployment issues
-look at header
 fix the piss yellow gradient 
 make all text more readable
 fix the readme file
