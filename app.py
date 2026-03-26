@@ -1,9 +1,14 @@
 from flask import Flask, render_template, request, jsonify
 import json
 import statistics
+import logging
 from datetime import datetime
 from config import Config
 from api_services import DataAggregator, GeminiService, NominatimService
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -15,25 +20,6 @@ data_aggregator = DataAggregator()
 gemini_service = GeminiService()
 nominatim_service = NominatimService()
 
-# Sample rental data - in production this would come from APIs
-SAMPLE_LISTINGS = [
-    {"price": 2100, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 850, "address": "123 Queen St"},
-    {"price": 2250, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 900, "address": "456 King St"},
-    {"price": 2400, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 950, "address": "789 Main St"},
-    {"price": 1950, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 800, "address": "321 Dundas St"},
-    {"price": 2500, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 1000, "address": "654 Hurontario St"},
-    {"price": 2200, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 875, "address": "987 Burnhamthorpe Rd"},
-    {"price": 2350, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 920, "address": "147 Eglinton Ave"},
-    {"price": 2600, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 1050, "address": "258 Lakeshore Rd"},
-    {"price": 2000, "bedrooms": 2, "bathrooms": 1, "location": "Mississauga", "sqft": 825, "address": "369 Britannia Rd"},
-    {"price": 2450, "bedrooms": 2, "bathrooms": 2, "location": "Mississauga", "sqft": 980, "address": "741 Mavis Rd"},
-    {"price": 1800, "bedrooms": 1, "bathrooms": 1, "location": "Toronto", "sqft": 650, "address": "100 Yonge St"},
-    {"price": 2200, "bedrooms": 1, "bathrooms": 1, "location": "Toronto", "sqft": 700, "address": "200 Bay St"},
-    {"price": 1900, "bedrooms": 1, "bathrooms": 1, "location": "Toronto", "sqft": 675, "address": "300 Queen St"},
-    {"price": 3200, "bedrooms": 3, "bathrooms": 2, "location": "Toronto", "sqft": 1200, "address": "400 King St"},
-    {"price": 3500, "bedrooms": 3, "bathrooms": 2, "location": "Toronto", "sqft": 1300, "address": "500 University Ave"},
-]
-
 class RentFairAnalyzer:
     def __init__(self):
         self.data_aggregator = data_aggregator
@@ -41,29 +27,51 @@ class RentFairAnalyzer:
         self.nominatim_service = nominatim_service
     
     def find_comparables(self, user_listing):
-        """Find comparable listings based on location and bedrooms"""
+        """Find comparable listings based on location and bedrooms - real API data only"""
         target_beds = user_listing['bedrooms']
         target_location = user_listing['location']
         
-        # Use data aggregator to get comparables from APIs
+        logger.info(f"Finding real comparables for {target_beds} bedrooms in {target_location}")
+        
+        # Use data aggregator to get real comparables from RentCast API only
         comparables = self.data_aggregator.get_comparables(target_location, target_beds)
+        
+        if comparables:
+            logger.info(f"Found {len(comparables)} real comparable listings from RentCast API")
+            # Debug: print first few comparables
+            for i, comp in enumerate(comparables[:3], 1):
+                logger.info(f"  {i}. ${comp.get('price', 'N/A')} - {comp.get('bedrooms', 'N/A')} bed - {comp.get('address', 'N/A')}")
+        else:
+            logger.warning("No real comparable listings found from RentCast API")
         
         return comparables
     
     def calculate_market_stats(self, comparables):
-        """Calculate market statistics for comparable listings"""
+        """Calculate market statistics for real comparable listings only"""
         if not comparables:
+            logger.warning("No real comparables available for market stats")
             return None
         
-        prices = [c['price'] for c in comparables]
-        return {
-            'mean': statistics.mean(prices),
-            'median': statistics.median(prices),
-            'std_dev': statistics.stdev(prices) if len(prices) > 1 else 0,
-            'min': min(prices),
-            'max': max(prices),
-            'count': len(comparables)
+        # Ensure all comparables have valid prices from real data
+        valid_prices = [c['price'] for c in comparables if c.get('price') and c['price'] > 0]
+        
+        if not valid_prices:
+            logger.warning("No valid prices found in real comparables")
+            return None
+        
+        logger.info(f"Calculating real market stats from {len(valid_prices)} valid prices: {valid_prices}")
+        
+        stats = {
+            'mean': statistics.mean(valid_prices),
+            'median': statistics.median(valid_prices),
+            'std_dev': statistics.stdev(valid_prices) if len(valid_prices) > 1 else 0,
+            'min': min(valid_prices),
+            'max': max(valid_prices),
+            'count': len(valid_prices)
         }
+        
+        logger.info(f"Real market stats calculated: {stats}")
+        return stats
     
     def calculate_fairness_score(self, user_rent, market_stats):
         """Calculate fairness score and classification"""
@@ -139,57 +147,96 @@ def analyze_rent():
     try:
         data = request.get_json()
         
-        user_listing = {
-            'price': float(data['price']),
-            'bedrooms': int(data['bedrooms']),
-            'bathrooms': int(data['bathrooms']),
-            'location': data['location'],
-            'sqft': float(data.get('sqft', 0)) if data.get('sqft') else 0,
-            'address': data.get('address', '')
-        }
+        # Validate required fields (only essential ones)
+        required_fields = ['address', 'price', 'bedrooms', 'bathrooms', 'location']
+        missing_fields = [field for field in required_fields if not data.get(field) or str(data.get(field)).strip() == '']
+        
+        if missing_fields:
+            return jsonify({
+                'error': f'Missing required fields: {", ".join(missing_fields)}',
+                'solution': 'Please fill in all required fields with valid values'
+            }), 400
+        
+        # Extract and validate user listing data
+        try:
+            user_listing = {
+                'address': str(data.get('address', '')).strip(),
+                'price': int(float(str(data.get('price', '0')).strip() or '0')),
+                'bedrooms': int(float(str(data.get('bedrooms', '0')).strip() or '0')),
+                'bathrooms': int(float(str(data.get('bathrooms', '0')).strip() or '0')),
+                'location': str(data.get('location', '')).strip(),
+                'sqft': int(float(str(data.get('sqft', '0')).strip() or '0')) if data.get('sqft') and str(data.get('sqft')).strip() else 0
+            }
+        except (ValueError, TypeError) as e:
+            return jsonify({
+                'error': f'Invalid numeric values: {str(e)}',
+                'solution': 'Please ensure price, bedrooms, and bathrooms are valid numbers'
+            }), 400
+        
+        # Validate numeric ranges (sqft is optional)
+        if user_listing['price'] <= 0:
+            return jsonify({'error': 'Price must be greater than 0'}), 400
+        if user_listing['bedrooms'] <= 0 or user_listing['bedrooms'] > 10:
+            return jsonify({'error': 'Bedrooms must be between 1 and 10'}), 400
+        if user_listing['bathrooms'] <= 0 or user_listing['bathrooms'] > 10:
+            return jsonify({'error': 'Bathrooms must be between 1 and 10'}), 400
+        if user_listing['sqft'] > 0 and (user_listing['sqft'] < 100 or user_listing['sqft'] > 10000):
+            return jsonify({'error': 'Square footage must be between 100 and 10,000 (or leave blank)'}), 400
+        
+        logger.info(f"Analyzing rental: {user_listing}")
+        
+        # Get coordinates
+        coordinates = analyzer.geocode_address(user_listing['address'])
         
         # Find comparable listings
         comparables = analyzer.find_comparables(user_listing)
         
         if not comparables:
+            logger.error("No comparable listings found - API key issue likely")
             return jsonify({
-                'error': 'No comparable listings found. Try a different location or bedroom count.',
-                'comparables': []
+                'error': 'No comparable listings found. This usually means the RentCast API key is invalid or expired.',
+                'solution': 'Please update your RENTCAST_API_KEY in the .env file. Get a new key from https://app.rentcast.io/app/api',
+                'debug_info': {
+                    'location': user_listing['location'],
+                    'bedrooms': user_listing['bedrooms'],
+                    'api_key_set': bool(Config.RENTCAST_API_KEY)
+                }
             }), 400
         
         # Calculate market statistics
         market_stats = analyzer.calculate_market_stats(comparables)
         
+        if not market_stats:
+            return jsonify({'error': 'Could not calculate market statistics'}), 500
+        
         # Calculate fairness score
         fairness_result = analyzer.calculate_fairness_score(user_listing['price'], market_stats)
         
-        # Generate explanation
-        explanation = analyzer.generate_explanation(user_listing, market_stats, fairness_result, comparables)
-        
-        # Generate AI negotiation tips if available
+        # Generate AI tips
         ai_tips = analyzer.generate_ai_negotiation_tips({
             'user_listing': user_listing,
-            'market_stats': market_stats,
-            'fairness_result': fairness_result
+            'fairness_result': fairness_result,
+            'market_stats': market_stats
         })
         
-        # Geocode address if provided
-        coordinates = None
-        if user_listing.get('address'):
-            coordinates = analyzer.geocode_address(user_listing['address'])
-        
-        return jsonify({
+        # Prepare response
+        response = {
             'user_listing': user_listing,
-            'comparables': comparables,
+            'comparables': comparables[:10],  # Limit to top 10
             'market_stats': market_stats,
             'fairness_result': fairness_result,
-            'explanation': explanation,
             'ai_tips': ai_tips,
-            'coordinates': coordinates
-        })
+            'coordinates': coordinates,
+            'explanation': analyzer.generate_explanation(user_listing, market_stats, fairness_result)
+        }
+        
+        logger.info(f"Analysis complete: {fairness_result['classification']} ({fairness_result['percent_difference']:.1f}%)")
+        
+        return jsonify(response)
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error in analyze_rent: {e}")
+        return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
 
 @app.route('/market-stats/<location>/<int:bedrooms>')
 def get_market_stats(location, bedrooms):

@@ -120,6 +120,7 @@ class RentCastService(APIService):
     def search_rental_listings(self, location: str, bedrooms: int = None, price_min: int = None, price_max: int = None) -> List[Dict]:
         """Search rental listings using RentCast API"""
         if not self.api_key:
+            logger.error("RentCast API key not configured")
             return []
         
         url = f"{self.base_url}/listings/rental/long-term"
@@ -142,13 +143,24 @@ class RentCastService(APIService):
             params['priceMax'] = price_max
         
         try:
-            data = self._make_request(url, headers, params)
-            if data and isinstance(data, list):
-                return self._normalize_rentcast_data(data)
+            response = self._make_request(url, headers, params)
+            if response and isinstance(response, list):
+                logger.info(f"Successfully got {len(response)} listings from RentCast API")
+                return self._normalize_rentcast_data(response)
+            else:
+                logger.warning(f"RentCast API returned unexpected response: {type(response)}")
+                return []
         except Exception as e:
-            logger.error(f"Error searching RentCast listings: {e}")
-        
-        return []
+            error_msg = str(e).lower()
+            if '401' in error_msg or 'unauthorized' in error_msg:
+                logger.error("❌ RentCast API key is INVALID or EXPIRED")
+                logger.error("Please get a new API key from: https://app.rentcast.io/app/api")
+            elif '404' in error_msg:
+                logger.error(f"❌ RentCast API endpoint not found for: {location}")
+                logger.error("Try using a different US city/state format")
+            else:
+                logger.error(f"❌ RentCast API error: {e}")
+            return []
     
     def get_rent_estimate(self, address: str) -> Dict:
         """Get rent estimate for a specific property"""
@@ -572,21 +584,30 @@ class DataAggregator:
         self.gemini_service = GeminiService()
     
     def get_comparables(self, location: str, bedrooms: int, max_results: int = 50) -> List[Dict]:
-        """Get comparable listings from all available sources"""
-        all_comparables = []
+        """Get comparable listings from RentCast API only - no fake data"""
         
-        # Try RentCast API first (primary source)
-        rentcast_results = self.rentcast_service.search_rental_listings(location, bedrooms)
-        all_comparables.extend(rentcast_results)
+        logger.info(f"Searching for {bedrooms} bedroom rentals in {location}")
         
-        # If no results, return sample data
-        if not all_comparables:
-            logger.warning("No API results available, using sample data")
-            return self._get_sample_data(location, bedrooms)
-        
-        # Limit results and remove duplicates
-        unique_comparables = self._remove_duplicates(all_comparables)
-        return unique_comparables[:max_results]
+        # Try RentCast API only - no fallback to fake data
+        try:
+            rentcast_results = self.rentcast_service.search_rental_listings(location, bedrooms)
+            
+            if rentcast_results:
+                logger.info(f"Got {len(rentcast_results)} real listings from RentCast API")
+                
+                # Limit results and remove duplicates
+                unique_comparables = self._remove_duplicates(rentcast_results)
+                final_results = unique_comparables[:max_results]
+                
+                logger.info(f"Returning {len(final_results)} unique real listings")
+                return final_results
+            else:
+                logger.warning("RentCast API returned no results")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error calling RentCast API: {e}")
+            return []
     
     def _remove_duplicates(self, listings: List[Dict]) -> List[Dict]:
         """Remove duplicate listings based on address and price"""
@@ -601,15 +622,4 @@ class DataAggregator:
         
         return unique
     
-    def _get_sample_data(self, location: str, bedrooms: int) -> List[Dict]:
-        """Fallback sample data when APIs are unavailable"""
-        # Return a subset of our sample data
-        from app import SAMPLE_LISTINGS
-        
-        filtered = [
-            listing for listing in SAMPLE_LISTINGS
-            if listing['location'].lower() == location.lower() and 
-            abs(listing['bedrooms'] - bedrooms) <= 1
-        ]
-        
-        return filtered[:10]  # Return up to 10 results
+    
