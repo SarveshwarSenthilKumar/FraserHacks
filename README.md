@@ -1,6 +1,6 @@
 # RentFair - Smart Rent Analysis System
 
-🏠 **RentFair** is a comprehensive rent fairness analysis platform that helps renters determine if a rental listing is fairly priced compared to the market. Built with advanced statistical analysis and AI-powered insights, RentFair provides transparent, data-driven rental market intelligence.
+**RentFair** is a comprehensive rent fairness analysis platform that helps renters determine if a rental listing is fairly priced compared to the market. Built with advanced statistical analysis and AI-powered insights, RentFair provides transparent, data-driven rental market intelligence.
 
 ## 📋 Table of Contents
 
@@ -20,30 +20,30 @@
 - [License](#-license)
 - [Team](#-team)
 
-## 🚀 Features
+## Features
 
 ### Core Functionality
-- **📊 Fairness Scoring**: Advanced Z-score based algorithm to determine rent fairness with statistical confidence
-- **📈 Data Visualization**: Interactive charts showing price distribution, market trends, and comparative analysis
-- **🗺️ Location Intelligence**: Interactive map view of comparable listings with geographic clustering
-- **🤖 AI Insights**: Powered by Google Gemini API for intelligent explanations and negotiation tips
-- **🎯 Comparable Analysis**: Smart filtering of similar listings based on multiple criteria
+- **Fairness Scoring**: Advanced Z-score based algorithm to determine rent fairness with statistical confidence
+- **Data Visualization**: Interactive charts showing price distribution, market trends, and comparative analysis
+- **Location Intelligence**: Interactive map view of comparable listings with geographic clustering
+- **AI Insights**: Powered by Google Gemini API for intelligent explanations and negotiation tips
+- **Comparable Analysis**: Smart filtering of similar listings based on multiple criteria
 
 ### Advanced Features
-- **⚡ Real-time Analysis**: Instant market comparison and fairness assessment
-- **📱 Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **� Advanced Filtering**: Multi-parameter filtering for precise comparable matching
-- **💰 Investment Metrics**: Yield estimates, cap rates, and appreciation potential
-- **📊 Market Intelligence**: Trend analysis, inventory levels, and days on market
-- **🛡️ Exploitation Detection**: AI-powered alerts for suspiciously overpriced listings
+- **Real-time Analysis**: Instant market comparison and fairness assessment
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Advanced Filtering**: Multi-parameter filtering for precise comparable matching
+- **Investment Metrics**: Yield estimates, cap rates, and appreciation potential
+- **Market Intelligence**: Trend analysis, inventory levels, and days on market
+- **Exploitation Detection**: AI-powered alerts for suspiciously overpriced listings
 
 ### User Experience
-- **� Modern UI**: Beautiful, responsive design with smooth animations and glass morphism effects
-- **🎨 Professional Design**: Cohesive green gradient theme with excellent readability
-- **⚙️ Loading States**: User-friendly feedback during analysis with animated indicators
-- **📄 Export Functionality**: Download comparable listings and analysis reports
+- **Modern UI**: Beautiful, responsive design with smooth animations and glass morphism effects
+- **Professional Design**: Cohesive green gradient theme with excellent readability
+- **Loading States**: User-friendly feedback during analysis with animated indicators
+- **Export Functionality**: Download comparable listings and analysis reports
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 - **Flask 2.3+** - Python web framework with robust routing and templating
@@ -65,7 +65,7 @@
 - **Git** - Version control
 - **Heroku/Docker** - Deployment platforms
 
-## � Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -82,7 +82,7 @@ python app.py
 
 Visit `http://localhost:5000` to start analyzing rental properties!
 
-## � Installation
+## Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -142,7 +142,7 @@ The system uses a sophisticated Z-score based approach:
    - **Fair**: ±10% of market
    - **Overpriced**: > +10% above market
 
-## � Configuration
+## Configuration
 
 ### Environment Variables
 | Variable | Description | Required | Default |
@@ -184,117 +184,7 @@ Edit `static/css/style.css` to customize:
 - Glass morphism effects
 - Responsive breakpoints
 
-## 📊 API Documentation
-
-### Base URL
-```
-http://localhost:5000/api
-```
-
-### Endpoints
-
-#### POST `/api/analyze-rent`
-Analyzes a rental listing for fairness.
-
-**Request Headers:**
-```
-Content-Type: application/json
-```
-
-**Request Body:**
-```json
-{
-  "price": 2400,
-  "bedrooms": 2,
-  "bathrooms": 1,
-  "location": "Mississauga",
-  "sqft": 850,
-  "address": "123 Queen St E"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "user_listing": {
-    "price": 2400,
-    "bedrooms": 2,
-    "bathrooms": 1,
-    "location": "Mississauga",
-    "sqft": 850,
-    "address": "123 Queen St E"
-  },
-  "fairness_result": {
-    "score": -5.2,
-    "label": "Fair",
-    "color": "#10B981",
-    "z_score": -0.3,
-    "mean_price": 2350,
-    "median_price": 2300,
-    "std_dev": 150,
-    "comparable_count": 8,
-    "percentage_diff": -2.1
-  },
-  "comparables": [
-    {
-      "price": 2300,
-      "bedrooms": 2,
-      "bathrooms": 1,
-      "location": "Mississauga",
-      "sqft": 800,
-      "address": "456 Hurontario St"
-    }
-  ],
-  "ai_explanation": {
-    "analysis": "Based on the market analysis...",
-    "negotiation_tips": ["Consider negotiating...", "Market trends indicate..."]
-  },
-  "price_distribution": {
-    "min": 2000,
-    "max": 2800,
-    "quartiles": [2200, 2350, 2500]
-  },
-  "exploitation_alert": false
-}
-```
-
-**Error Responses:**
-- `400 Bad Request`: Missing or invalid parameters
-- `500 Internal Server Error`: API processing error
-
-#### GET `/api/market-stats`
-Returns general market statistics for all locations.
-
-**Response (200 OK):**
-```json
-{
-  "total_listings": 150,
-  "locations": ["Mississauga", "Toronto", "Vancouver"],
-  "price_ranges": {
-    "Mississauga": {"min": 1800, "max": 3500},
-    "Toronto": {"min": 2200, "max": 4500}
-  },
-  "market_trends": {
-    "avg_price_change": "+5.2%",
-    "inventory_level": "Low",
-    "days_on_market": 18
-  }
-}
-```
-
-#### GET `/api/health`
-Health check endpoint.
-
-**Response (200 OK):**
-```json
-{
-  "status": "healthy",
-  "timestamp": "2024-03-26T15:30:00Z",
-  "version": "1.0.0"
-}
-```
-
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 FraserHacks/
@@ -303,7 +193,7 @@ FraserHacks/
 ├── README.md                  # Project documentation
 ├── .env.example               # Environment variables template
 ├── .gitignore                 # Git ignore rules
-├── Procfile                   # Heroku deployment configuration
+├── Procfile                   # Deployment configuration
 ├── notes.txt                  # Development notes
 ├── templates/
 │   └── index.html             # Main HTML template with responsive design
@@ -349,79 +239,6 @@ FraserHacks/
 - **Keyboard Navigation**: Full keyboard accessibility
 - **Color Contrast**: WCAG AA compliant text contrast ratios
 
-## � Deployment
-
-### Heroku Deployment
-
-1. **Install Heroku CLI**
-   ```bash
-   # macOS
-   brew tap heroku/brew && brew install heroku
-   
-   # Windows
-   # Download from https://devcenter.heroku.com/articles/heroku-cli
-   ```
-
-2. **Login to Heroku**
-   ```bash
-   heroku login
-   ```
-
-3. **Create Heroku App**
-   ```bash
-   heroku create rentfair-app
-   ```
-
-4. **Set Environment Variables**
-   ```bash
-   heroku config:set GEMINI_API_KEY=your_api_key_here
-   heroku config:set FLASK_ENV=production
-   ```
-
-5. **Deploy Application**
-   ```bash
-   git add .
-   git commit -m "Deploy to Heroku"
-   git push heroku main
-   ```
-
-6. **Open Application**
-   ```bash
-   heroku open
-   ```
-
-### Docker Deployment
-
-1. **Create Dockerfile**
-   ```dockerfile
-   FROM python:3.9-slim
-   
-   WORKDIR /app
-   
-   # Install system dependencies
-   RUN apt-get update && apt-get install -y \
-       gcc \
-       && rm -rf /var/lib/apt/lists/*
-   
-   # Install Python dependencies
-   COPY requirements.txt .
-   RUN pip install --no-cache-dir -r requirements.txt
-   
-   # Copy application code
-   COPY . .
-   
-   # Expose port
-   EXPOSE 5000
-   
-   # Run application
-   CMD ["python", "app.py"]
-   ```
-
-2. **Build and Run**
-   ```bash
-   docker build -t rentfair .
-   docker run -p 5000:5000 -e GEMINI_API_KEY=your_key rentfair
-   ```
 
 ### Environment-Specific Configuration
 
@@ -440,8 +257,6 @@ DEBUG=True
 SECRET_KEY=dev_secret_key
 GEMINI_API_KEY=your_dev_api_key
 ```
-
-## 🧪 Testing
 
 ### Manual Testing Checklist
 
@@ -509,45 +324,11 @@ python -m pytest tests/
 # Integration tests
 python -m pytest tests/integration/
 
-# UI tests with Selenium
+# UI tests
 python -m pytest tests/ui/
 ```
 
-## 📈 Future Enhancements
-
-### Phase 1: Data Integration
-- [ ] Real-time API integration with Zillow, Realtor.ca
-- [ ] Multiple city support with expanded datasets
-- [ ] Historical price trend analysis
-- [ ] Neighborhood scoring and insights
-
-### Phase 2: Advanced Features
-- [ ] User accounts and saved searches
-- [ ] Email alerts for new listings
-- [ ] Mortgage calculator integration
-- [ ] Commute time analysis
-- [ ] School district information
-
-### Phase 3: AI & Machine Learning
-- [ ] Advanced price prediction models
-- [ ] Natural language search queries
-- [ ] Image recognition for property features
-- [ ] Sentiment analysis of listing descriptions
-
-### Phase 4: Mobile & Expansion
-- [ ] React Native mobile app
-- [ ] Apple Watch and Wear OS integration
-- [ ] International market support
-- [ ] Commercial property analysis
-
-### Technical Improvements
-- [ ] Redis caching for API responses
-- [ ] PostgreSQL database integration
-- [ ] GraphQL API implementation
-- [ ] Microservices architecture
-- [ ] Kubernetes deployment
-
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please follow these guidelines:
 
@@ -602,22 +383,21 @@ Brief description of changes
 - [ ] Documentation update
 
 ## Testing
-- [ ] Manual testing completed
-- [ ] All tests pass
-- [ ] No regression issues
+- [*] Manual testing completed
+- [*] All tests pass
+- [*] No false data
+- [*] No regression issues
 
-## Screenshots
-Add screenshots if applicable
 ```
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ```
 MIT License
 
-Copyright (c) 2024 A. Maji and S. Senthil Kumar
+Copyright (c) 2026 A. Maji and S. Senthil Kumar
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -641,52 +421,50 @@ SOFTWARE.
 ## 👥 Team
 
 **Developers**
-- **A. Maji** - Backend Development, API Design, Algorithm Implementation
-- **S. Senthil Kumar** - Frontend Development, UI/UX Design, Data Visualization
+- **S. Senthil Kumar** - Backend Development, API Design, Algorithm Implementation, Data Analysis
+- **A. Maji** - Frontend Development, UI/UX Design, Testing
 
-**Built with ❤️ for FraserHacks 2024**
+**Built for FraserHacks 2026**
 
 ---
-
-## 🏆 Hackathon Achievement
 
 ### 🎯 Problem Statement
 **"Renters are making one of the biggest financial decisions of their lives without market transparency. RentFair uses real market data to instantly evaluate whether a listing is fair, overpriced, or a hidden deal."**
 
-### 🌟 What Makes This Project Special
+###  What Makes This Project Special
 
-#### ✅ **Universal Problem**
+#### **Universal Problem**
 - Everyone understands the rent affordability challenge
 - Addresses a real financial pain point
 - Impactful solution for millions of renters
 
-#### ✅ **Clear Impact**
-- Instant before/after value proposition
+#### **Clear Impact**
+- Instant value proposition
 - Tangible savings for users
 - Empowers renters with data-driven decisions
 
-#### ✅ **Strong Visuals**
+#### **Strong Visuals**
 - Data-driven charts and maps
 - Professional, modern UI design
 - Engaging user experience
 
-#### ✅ **Technical Depth**
-- Z-score calculations and statistical analysis
+#### **Technical Depth**
+- Detailed statistical analysis
 - AI integration with Gemini API
 - Responsive design and accessibility
 
-#### ✅ **Demo-Ready**
+#### **Demo-Ready**
 - Polished UI with smooth interactions
 - Complete end-to-end functionality
 - Production-ready deployment options
 
-### 🚀 Technologies Demonstrated
-- **Backend**: Flask, RESTful APIs, Statistical Analysis
+### Technologies Demonstrated
+- **Backend**: Flask, Statistical Analysis
 - **Frontend**: Modern JavaScript, Responsive Design, Data Visualization
 - **AI/ML**: Google Gemini API, Natural Language Processing
-- **DevOps**: Docker, Heroku deployment, Environment configuration
+- **DevOps**: OnRender, Environment configuration
 
-### 📊 Project Metrics
+### Project Metrics
 - **Lines of Code**: 2000+ across frontend and backend
 - **API Endpoints**: 3 fully functional endpoints
 - **UI Components**: 15+ interactive components
@@ -695,6 +473,6 @@ SOFTWARE.
 
 ---
 
-**Thank you for checking out RentFair! 🎉**
+**Thank you for checking out RentFair!**
 
 If you find this project useful, please give us a ⭐ on GitHub and consider contributing to make rental markets more transparent for everyone.
