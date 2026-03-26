@@ -94,9 +94,15 @@ def generate_comparable_listings_gemini(user_listing):
         - location: "{user_listing['location']}"
         - sqft: square footage as number
         - address: realistic street address in {user_listing['location']}
-        - listing_url: realistic rental listing URL (use real estate websites like zillow.com, realtor.ca, etc.)
+        - listing_url: MUST be a valid, complete URL starting with https:// (use real estate websites like zillow.com, realtor.ca, apartments.com, or zumper.com)
         
-        Return only a valid JSON array of 10 listing objects. No additional text.
+        IMPORTANT: The listing_url MUST be a complete, valid URL that starts with "https://". 
+        Examples of good URLs:
+        - "https://www.zillow.com/homedetails/123-Main-St-example-address/"
+        - "https://www.realtor.ca/real-estate/example-address"
+        - "https://www.apartments.com/example-address"
+        
+        Return only a valid JSON array of 10 listing objects. No additional text or markdown formatting.
         """
         
         model = genai.GenerativeModel('gemini-2.5-flash-lite')

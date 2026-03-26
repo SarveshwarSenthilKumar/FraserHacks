@@ -376,66 +376,160 @@ function createPriceChart(price_distribution, userPrice) {
 }
 
 function createMap(comparables, user_listing) {
-    // Initialize map if it doesn't exist
-    if (!map) {
-        // Center on Mississauga by default
-        map = L.map('map').setView([43.5890, -79.6441], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-    } else {
-        map.eachLayer(layer => {
-            if (layer instanceof L.Marker) {
-                map.removeLayer(layer);
+    console.log('Creating map with comparables:', comparables.length, 'listings');
+    
+    // Wait for DOM to be ready
+    setTimeout(() => {
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer) {
+            console.error('Map container not found');
+            return;
+        }
+        
+        console.log('Map container found:', mapContainer);
+        console.log('Map container dimensions:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
+        
+        // Ensure container has proper dimensions
+        if (mapContainer.offsetHeight === 0) {
+            mapContainer.style.height = '400px';
+            mapContainer.style.width = '100%';
+        }
+        
+        // Initialize map if it doesn't exist
+        if (!map) {
+            try {
+                console.log('Initializing new map...');
+                // Center on Mississauga by default
+                map = L.map('map').setView([43.5890, -79.6441], 12);
+                
+                // Add OpenStreetMap tiles with proper configuration
+                const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19,
+                    minZoom: 1,
+                    tileSize: 256,
+                    detectRetina: true
+                });
+                
+                tileLayer.addTo(map);
+                
+                // Listen for tile load events
+                tileLayer.on('tileload', function(e) {
+                    console.log('Map tile loaded successfully');
+                });
+                
+                tileLayer.on('tileerror', function(e) {
+                    console.error('Map tile failed to load:', e);
+                });
+                
+                console.log('Map initialized successfully');
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                // Show error message in map container
+                mapContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full bg-gray-100 rounded-lg p-4">
+                        <div class="text-center">
+                            <i class="fas fa-map-marked-alt text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-600">Map unavailable</p>
+                            <p class="text-sm text-gray-500">Showing property locations in list below</p>
+                        </div>
+                    </div>
+                `;
+                return;
             }
+        } else {
+            console.log('Using existing map, clearing markers...');
+            // Clear existing markers
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+        }
+        
+        // Add markers for comparable listings
+        comparables.forEach((listing, index) => {
+            console.log(`Adding marker ${index + 1} for:`, listing.address);
+            
+            // Use coordinates from server or generate simple ones
+            const lat = listing.lat || 43.5890 + (Math.random() - 0.5) * 0.1;
+            const lng = listing.lng || -79.6441 + (Math.random() - 0.5) * 0.1;
+            
+            const marker = L.marker([lat, lng]).addTo(map);
+            
+            // Create safe URL with better validation
+            let safeUrl = '#';
+            if (listing.listing_url) {
+                const urlStr = String(listing.listing_url).trim();
+                if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+                    safeUrl = urlStr;
+                    console.log(`Valid URL found for listing ${index + 1}:`, safeUrl);
+                } else {
+                    console.log(`Invalid URL for listing ${index + 1}:`, urlStr);
+                }
+            }
+            
+            const popupContent = safeUrl !== '#' ? 
+                `<div class="p-2" style="min-width: 200px;">
+                    <h4 class="font-bold mb-2">Comparable ${index + 1}</h4>
+                    <p class="text-sm mb-1"><strong>$${listing.price}/month</strong></p>
+                    <p class="text-sm mb-1">${listing.bedrooms} bed, ${listing.bathrooms} bath</p>
+                    <p class="text-sm mb-2">${listing.address}</p>
+                    <a href="${safeUrl}" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">View Listing →</a>
+                </div>` :
+                `<div class="p-2" style="min-width: 200px;">
+                    <h4 class="font-bold mb-2">Comparable ${index + 1}</h4>
+                    <p class="text-sm mb-1"><strong>$${listing.price}/month</strong></p>
+                    <p class="text-sm mb-1">${listing.bedrooms} bed, ${listing.bathrooms} bath</p>
+                    <p class="text-sm">${listing.address}</p>
+                </div>`;
+            
+            marker.bindPopup(popupContent);
         });
-    }
-    
-    // Add markers for comparable listings
-    comparables.forEach((listing, index) => {
-        // Use coordinates from server or generate simple ones
-        const lat = listing.lat || 43.5890 + (Math.random() - 0.5) * 0.1;
-        const lng = listing.lng || -79.6441 + (Math.random() - 0.5) * 0.1;
         
-        const marker = L.marker([lat, lng]).addTo(map);
+        // Add marker for user listing
+        const userCoords = getSimpleCoordinates(user_listing.address || 'Downtown', user_listing.location);
+        const userMarker = L.marker([userCoords.lat, userCoords.lng], {
+            icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: #FF6384; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map);
         
-        const popupContent = listing.listing_url ? 
-            `<div class="p-2">
-                <h4 class="font-bold">Comparable ${index + 1}</h4>
-                <p class="text-sm">$${listing.price}/month</p>
-                <p class="text-sm">${listing.bedrooms} bed, ${listing.bathrooms} bath</p>
-                <p class="text-sm">${listing.address}</p>
-                <a href="${listing.listing_url}" target="_blank" class="text-blue-600 hover:underline text-sm">View Listing</a>
-            </div>` :
-            `<div class="p-2">
-                <h4 class="font-bold">Comparable ${index + 1}</h4>
-                <p class="text-sm">$${listing.price}/month</p>
-                <p class="text-sm">${listing.bedrooms} bed, ${listing.bathrooms} bath</p>
-                <p class="text-sm">${listing.address}</p>
-            </div>`;
+        userMarker.bindPopup(`
+            <div class="p-2" style="min-width: 200px;">
+                <h4 class="font-bold text-red-600 mb-2">Your Listing</h4>
+                <p class="text-sm mb-1"><strong>$${user_listing.price}/month</strong></p>
+                <p class="text-sm mb-1">${user_listing.bedrooms} bed, ${user_listing.bathrooms} bath</p>
+                <p class="text-sm">${user_listing.address || 'Address not provided'}</p>
+            </div>
+        `);
         
-        marker.bindPopup(popupContent);
-    });
-    
-    // Add marker for user listing
-    const userCoords = getSimpleCoordinates(user_listing.address || 'Downtown', user_listing.location);
-    const userMarker = L.marker([userCoords.lat, userCoords.lng], {
-        icon: L.divIcon({
-            className: 'custom-div-icon',
-            html: `<div style="background-color: #FF6384; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-        })
-    }).addTo(map);
-    
-    userMarker.bindPopup(`
-        <div class="p-2">
-            <h4 class="font-bold text-red-600">Your Listing</h4>
-            <p class="text-sm">$${user_listing.price}/month</p>
-            <p class="text-sm">${user_listing.bedrooms} bed, ${user_listing.bathrooms} bath</p>
-            <p class="text-sm">${user_listing.address || 'Address not provided'}</p>
-        </div>
-    `);
+        // Force map to redraw and invalidate size
+        setTimeout(() => {
+            if (map) {
+                console.log('Invalidating map size and fitting bounds...');
+                map.invalidateSize();
+                
+                // Fit all markers in view
+                const group = new L.featureGroup([userMarker]);
+                comparables.forEach((listing, index) => {
+                    const lat = listing.lat || 43.5890 + (Math.random() - 0.5) * 0.1;
+                    const lng = listing.lng || -79.6441 + (Math.random() - 0.5) * 0.1;
+                    const marker = L.marker([lat, lng]);
+                    group.addLayer(marker);
+                });
+                
+                map.fitBounds(group.getBounds().extend(userMarker.getLatLng()), { 
+                    padding: [50, 50],
+                    maxZoom: 15 
+                });
+            }
+        }, 500);
+        
+    }, 500); // Increased delay to ensure DOM is fully ready
 }
 
 function updateAIExplanation(ai_explanation) {
@@ -463,7 +557,18 @@ function updateAIExplanation(ai_explanation) {
 function displayComparableListings(comparables) {
     const container = document.getElementById('comparableListings');
     
-    container.innerHTML = comparables.map((listing, index) => `
+    container.innerHTML = comparables.map((listing, index) => {
+        // Enhanced URL validation
+        let safeUrl = null;
+        if (listing.listing_url) {
+            const urlStr = String(listing.listing_url).trim();
+            // Check for valid URL patterns
+            if (urlStr.match(/^https?:\/\/.+\..+/)) {
+                safeUrl = urlStr;
+            }
+        }
+        
+        return `
         <div class="comparable-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg">
             <div class="flex justify-between items-start mb-3">
                 <h4 class="font-semibold text-gray-800">Comparable ${index + 1}</h4>
@@ -488,16 +593,24 @@ function displayComparableListings(comparables) {
                     <i class="fas fa-map-marker-alt mr-1"></i>
                     ${listing.address}
                 </div>
-                ${listing.listing_url ? `
+                ${safeUrl ? `
                 <div class="mt-3 pt-3 border-t border-gray-200">
-                    <a href="${listing.listing_url}" target="_blank" rel="noopener noreferrer" 
-                       class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" 
+                       class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium">
                         <i class="fas fa-external-link-alt mr-1"></i>
                         View Listing
                     </a>
                 </div>
-                ` : ''}
+                ` : `
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <span class="text-xs text-gray-400 italic">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        No listing link available
+                    </span>
+                </div>
+                `}
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
