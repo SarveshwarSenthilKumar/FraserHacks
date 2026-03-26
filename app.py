@@ -41,31 +41,6 @@ SAMPLE_LISTINGS = [
 
 def generate_simple_coordinates(address, location):
     """Generate simple coordinates without any external dependencies"""
-    # Simple city center coordinates
-    city_centers = {
-        'mississauga': [43.5890, -79.6441],
-        'toronto': [43.6532, -79.3832],
-        'vancouver': [49.2827, -123.1207],
-        'montreal': [45.5017, -73.5673],
-        'calgary': [51.0447, -114.0719],
-        'ottawa': [45.4215, -75.6972]
-    }
-    
-    # Get city center or default to Mississauga
-    center = city_centers.get(location.lower(), city_centers['mississauga'])
-    
-    # Add small random offset for variety
-    import random
-    lat_offset = (random.random() - 0.5) * 0.1  # ±0.05 degrees
-    lng_offset = (random.random() - 0.5) * 0.1  # ±0.05 degrees
-    
-    return {
-        'lat': center[0] + lat_offset,
-        'lng': center[1] + lng_offset
-    }
-
-def generate_simple_coordinates(address, location):
-    """Generate simple coordinates without any external dependencies"""
     # International city center coordinates
     city_centers = {
         # Canada
@@ -638,7 +613,7 @@ def generate_comparable_listings_gemini(user_listing):
         """
         
         model = genai.GenerativeModel('gemini-2.5-flash-lite')
-        response = model.generate_content(prompt, generation_config={"name": "rent_analysis"})
+        response = model.generate_content(prompt)
         response_text = response.text.strip()
         
         # Try to parse JSON response
@@ -738,8 +713,30 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
     try:
         # Use Gemini API if available
         if GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY':
+            # Create prompt for AI explanation
+            prompt = f"""
+            Analyze this rental property and provide negotiation advice:
+            
+            Property Details:
+            - Price: ${user_listing['price']}/month
+            - Bedrooms: {user_listing['bedrooms']}
+            - Bathrooms: {user_listing['bathrooms']}
+            - Location: {user_listing['location']}
+            - Square Feet: {user_listing['sqft']}
+            
+            Market Analysis:
+            - Fairness Score: {fairness_result['score']:.1f}%
+            - Market Label: {fairness_result['label']}
+            - Comparable Properties: {len(comparables)}
+            - Average Market Price: ${fairness_result.get('mean_price', 0):.0f}
+            
+            Please provide:
+            EXPLANATION: [Brief explanation of the market position and what the score means]
+            TIPS: [3-4 specific negotiation tips based on the analysis]
+            """
+            
             model = genai.GenerativeModel('gemini-2.5-flash-lite')
-            response = model.generate_content(prompt, generation_config={"name": "rent_analysis"})
+            response = model.generate_content(prompt)
             response_text = response.text
             
             # Parse the response
