@@ -1,0 +1,4 @@
+update the location thing to say town
+update the ui
+add advanced graphs and stats
+update to make sure the ai cannot be exploited
