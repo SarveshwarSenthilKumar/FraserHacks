@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentFair - Is Your Rent Fair?</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>🏠 RentFair</h1>
+                <p>Know if your rent is fair, overpriced, or a hidden deal</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Input Form Section -->
+            <section class="form-section">
+                <div class="form-card">
+                    <h2>Analyze Your Rental Listing</h2>
+                    <form id="rentForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <input type="text" id="address" name="address" placeholder="123 Main St" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="location">City</label>
+                                <select id="location" name="location" required>
+                                    <option value="">Select City</option>
+                                    <option value="Mississauga">Mississauga</option>
+                                    <option value="Toronto">Toronto</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="price">Monthly Rent ($)</label>
+                                <input type="number" id="price" name="price" placeholder="2400" min="0" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="bedrooms">Bedrooms</label>
+                                <select id="bedrooms" name="bedrooms" required>
+                                    <option value="">Select</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="bathrooms">Bathrooms</label>
+                                <select id="bathrooms" name="bathrooms" required>
+                                    <option value="">Select</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="sqft">Square Feet (optional)</label>
+                                <input type="number" id="sqft" name="sqft" placeholder="850" min="0">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="analyze-btn">
+                            <span class="btn-text">Analyze Rent</span>
+                            <span class="btn-loading" style="display: none;">Analyzing...</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Results Section (Initially Hidden) -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <!-- Fairness Score Card -->
+                <div class="result-card fairness-card">
+                    <div class="fairness-header">
+                        <div class="fairness-badge" id="fairnessBadge">
+                            <span class="badge-icon" id="badgeIcon"></span>
+                            <span class="badge-text" id="badgeText"></span>
+                        </div>
+                        <div class="fairness-details">
+                            <h3 id="fairnessTitle"></h3>
+                            <p class="price-difference" id="priceDifference"></p>
+                        </div>
+                    </div>
+                    <div class="explanation">
+                        <p id="explanationText"></p>
+                    </div>
+                </div>
+
+                <!-- Market Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Average Rent</h4>
+                        <p class="stat-value" id="avgRent"></p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Median Rent</h4>
+                        <p class="stat-value" id="medianRent"></p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Price Range</h4>
+                        <p class="stat-value" id="priceRange"></p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Comparable Listings</h4>
+                        <p class="stat-value" id="comparableCount"></p>
+                    </div>
+                </div>
+
+                <!-- Visualization Section -->
+                <div class="chart-card">
+                    <h3>Price Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Comparable Listings -->
+                <div class="listings-card">
+                    <h3>Comparable Listings</h3>
+                    <div class="listings-grid" id="listingsGrid">
+                        <!-- Listings will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section id="errorSection" class="error-section" style="display: none;">
+                <div class="error-card">
+                    <h3>❌ Analysis Error</h3>
+                    <p id="errorMessage"></p>
+                    <button class="retry-btn" onclick="resetForm()">Try Again</button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>© 2024 RentFair. Making rent transparent for everyone.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
