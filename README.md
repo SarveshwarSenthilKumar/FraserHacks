@@ -63,7 +63,7 @@
 - **Python 3.8+** - Core programming language
 - **pip** - Package management
 - **Git** - Version control
-- **Heroku/Docker** - Deployment platforms
+- **OnRender** - Deployment
 
 ## Quick Start
 
