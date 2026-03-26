@@ -1,0 +1,1 @@
+make it global and add an ai overview

@@ -2,8 +2,18 @@ from flask import Flask, render_template, request, jsonify
 import json
 import statistics
 from datetime import datetime
+from config import Config
+from api_services import DataAggregator, GeminiService, NominatimService
 
 app = Flask(__name__)
+
+# Load configuration
+app.config.from_object(Config)
+
+# Initialize services
+data_aggregator = DataAggregator()
+gemini_service = GeminiService()
+nominatim_service = NominatimService()
 
 # Sample rental data - in production this would come from APIs
 SAMPLE_LISTINGS = [
@@ -26,20 +36,17 @@ SAMPLE_LISTINGS = [
 
 class RentFairAnalyzer:
     def __init__(self):
-        self.listings = SAMPLE_LISTINGS
+        self.data_aggregator = data_aggregator
+        self.gemini_service = gemini_service
+        self.nominatim_service = nominatim_service
     
     def find_comparables(self, user_listing):
         """Find comparable listings based on location and bedrooms"""
-        comparables = []
         target_beds = user_listing['bedrooms']
-        target_location = user_listing['location'].lower()
+        target_location = user_listing['location']
         
-        for listing in self.listings:
-            # Filter by same location (case insensitive)
-            if listing['location'].lower() == target_location:
-                # Allow ±1 bedroom difference
-                if abs(listing['bedrooms'] - target_beds) <= 1:
-                    comparables.append(listing)
+        # Use data aggregator to get comparables from APIs
+        comparables = self.data_aggregator.get_comparables(target_location, target_beds)
         
         return comparables
     
@@ -111,11 +118,15 @@ class RentFairAnalyzer:
         explanation += f"Most comparable {bedrooms}-bedroom units in {location} range between ${market_stats['min']:,}–${market_stats['max']:,}, "
         explanation += f"with an average of ${market_stats['mean']:,}."
         
-        # Add negotiation tips if overpriced
-        if fairness_result['classification'] == "Overpriced":
-            explanation += f" You could reference comparable listings in the ${market_stats['min']:,}–${market_stats['median']:,} range when negotiating."
-        
         return explanation
+    
+    def generate_ai_negotiation_tips(self, analysis_result):
+        """Generate AI-powered negotiation tips"""
+        return self.gemini_service.generate_negotiation_tips(analysis_result)
+    
+    def geocode_address(self, address):
+        """Convert address to coordinates"""
+        return self.nominatim_service.geocode_address(address)
 
 analyzer = RentFairAnalyzer()
 
@@ -155,12 +166,26 @@ def analyze_rent():
         # Generate explanation
         explanation = analyzer.generate_explanation(user_listing, market_stats, fairness_result, comparables)
         
+        # Generate AI negotiation tips if available
+        ai_tips = analyzer.generate_ai_negotiation_tips({
+            'user_listing': user_listing,
+            'market_stats': market_stats,
+            'fairness_result': fairness_result
+        })
+        
+        # Geocode address if provided
+        coordinates = None
+        if user_listing.get('address'):
+            coordinates = analyzer.geocode_address(user_listing['address'])
+        
         return jsonify({
             'user_listing': user_listing,
             'comparables': comparables,
             'market_stats': market_stats,
             'fairness_result': fairness_result,
-            'explanation': explanation
+            'explanation': explanation,
+            'ai_tips': ai_tips,
+            'coordinates': coordinates
         })
         
     except Exception as e:
