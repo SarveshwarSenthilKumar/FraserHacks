@@ -402,9 +402,10 @@ function createMap(comparables, user_listing) {
                 // Center on Mississauga by default
                 map = L.map('map').setView([43.5890, -79.6441], 12);
                 
-                // Add OpenStreetMap tiles with proper configuration
-                const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors',
+                // Use CartoDB tiles as backup (more reliable)
+                const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap contributors © CARTO',
+                    subdomains: 'abcd',
                     maxZoom: 19,
                     minZoom: 1,
                     tileSize: 256,
@@ -420,6 +421,18 @@ function createMap(comparables, user_listing) {
                 
                 tileLayer.on('tileerror', function(e) {
                     console.error('Map tile failed to load:', e);
+                    // Try fallback tile server
+                    try {
+                        const fallbackLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors',
+                            maxZoom: 19
+                        });
+                        map.removeLayer(tileLayer);
+                        fallbackLayer.addTo(map);
+                        console.log('Switched to fallback tile server');
+                    } catch (fallbackError) {
+                        console.error('Fallback also failed:', fallbackError);
+                    }
                 });
                 
                 console.log('Map initialized successfully');
@@ -457,31 +470,20 @@ function createMap(comparables, user_listing) {
             
             const marker = L.marker([lat, lng]).addTo(map);
             
-            // Create safe URL with better validation
-            let safeUrl = '#';
-            if (listing.listing_url) {
-                const urlStr = String(listing.listing_url).trim();
-                if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-                    safeUrl = urlStr;
-                    console.log(`Valid URL found for listing ${index + 1}:`, safeUrl);
-                } else {
-                    console.log(`Invalid URL for listing ${index + 1}:`, urlStr);
-                }
-            }
+            // Create Google search URL instead of direct listing link
+            const searchQuery = encodeURIComponent(`${listing.address} ${listing.location} rental $${listing.price}`);
+            const googleSearchUrl = `https://www.google.com/search?q=${searchQuery}`;
             
-            const popupContent = safeUrl !== '#' ? 
-                `<div class="p-2" style="min-width: 200px;">
+            const popupContent = `
+                <div class="p-2" style="min-width: 200px;">
                     <h4 class="font-bold mb-2">Comparable ${index + 1}</h4>
                     <p class="text-sm mb-1"><strong>$${listing.price}/month</strong></p>
                     <p class="text-sm mb-1">${listing.bedrooms} bed, ${listing.bathrooms} bath</p>
                     <p class="text-sm mb-2">${listing.address}</p>
-                    <a href="${safeUrl}" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">View Listing →</a>
-                </div>` :
-                `<div class="p-2" style="min-width: 200px;">
-                    <h4 class="font-bold mb-2">Comparable ${index + 1}</h4>
-                    <p class="text-sm mb-1"><strong>$${listing.price}/month</strong></p>
-                    <p class="text-sm mb-1">${listing.bedrooms} bed, ${listing.bathrooms} bath</p>
-                    <p class="text-sm">${listing.address}</p>
+                    <a href="${googleSearchUrl}" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">
+                        <i class="fas fa-search mr-1"></i>
+                        Search on Google →
+                    </a>
                 </div>`;
             
             marker.bindPopup(popupContent);
@@ -558,15 +560,9 @@ function displayComparableListings(comparables) {
     const container = document.getElementById('comparableListings');
     
     container.innerHTML = comparables.map((listing, index) => {
-        // Enhanced URL validation
-        let safeUrl = null;
-        if (listing.listing_url) {
-            const urlStr = String(listing.listing_url).trim();
-            // Check for valid URL patterns
-            if (urlStr.match(/^https?:\/\/.+\..+/)) {
-                safeUrl = urlStr;
-            }
-        }
+        // Create Google search URL for the property
+        const searchQuery = encodeURIComponent(`${listing.address} ${listing.location} rental $${listing.price}`);
+        const googleSearchUrl = `https://www.google.com/search?q=${searchQuery}`;
         
         return `
         <div class="comparable-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg">
@@ -593,22 +589,13 @@ function displayComparableListings(comparables) {
                     <i class="fas fa-map-marker-alt mr-1"></i>
                     ${listing.address}
                 </div>
-                ${safeUrl ? `
                 <div class="mt-3 pt-3 border-t border-gray-200">
-                    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" 
+                    <a href="${googleSearchUrl}" target="_blank" rel="noopener noreferrer" 
                        class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium">
-                        <i class="fas fa-external-link-alt mr-1"></i>
-                        View Listing
+                        <i class="fas fa-search mr-1"></i>
+                        Search on Google
                     </a>
                 </div>
-                ` : `
-                <div class="mt-3 pt-3 border-t border-gray-200">
-                    <span class="text-xs text-gray-400 italic">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        No listing link available
-                    </span>
-                </div>
-                `}
             </div>
         </div>
     `;

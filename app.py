@@ -106,7 +106,7 @@ def generate_comparable_listings_gemini(user_listing):
         """
         
         model = genai.GenerativeModel('gemini-2.5-flash-lite')
-        response = model.generate_content(prompt)
+        response = model.generate_content(prompt, generation_config={"name": "rent_analysis"})
         response_text = response.text.strip()
         
         # Try to parse JSON response
@@ -203,43 +203,11 @@ def calculate_fairness_score(user_rent, comparables):
 def generate_ai_explanation(user_listing, fairness_result, comparables):
     """Generate AI-powered explanation using Gemini API"""
     
-    # Prepare the prompt for Gemini
-    prompt = f"""
-    You are a real estate expert analyzing rental prices. Based on the following data, provide a concise explanation of rent fairness and negotiation tips.
-
-    User Listing:
-    - Price: ${user_listing['price']}/month
-    - Bedrooms: {user_listing['bedrooms']}
-    - Bathrooms: {user_listing['bathrooms']}
-    - Location: {user_listing['location']}
-    - Square Feet: {user_listing['sqft']}
-
-    Market Analysis:
-    - Fairness Score: {fairness_result['score']:.1f}% ({'above' if fairness_result['score'] > 0 else 'below'} market)
-    - Label: {fairness_result['label']}
-    - Market Average: ${fairness_result['mean_price']:.0f}
-    - Comparable Listings: {fairness_result['comparable_count']}
-    - Price Range: ${min(comp['price'] for comp in comparables):.0f} - ${max(comp['price'] for comp in comparables):.0f}
-
-    Please provide:
-    1. A brief explanation of the rent fairness (2-3 sentences)
-    2. 3-4 specific negotiation tips
-
-    Format your response as:
-    EXPLANATION: [Your explanation here]
-    
-    TIPS:
-    • [Tip 1]
-    • [Tip 2]
-    • [Tip 3]
-    • [Tip 4]
-    """
-    
     try:
         # Use Gemini API if available
         if GEMINI_API_KEY != 'YOUR_GEMINI_API_KEY':
             model = genai.GenerativeModel('gemini-2.5-flash-lite')
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, generation_config={"name": "rent_analysis"})
             response_text = response.text
             
             # Parse the response
@@ -252,12 +220,64 @@ def generate_ai_explanation(user_listing, fairness_result, comparables):
                     "negotiation_tips": tips_part
                 }
         
-        # Fallback to predefined explanations if API fails
-        return get_fallback_explanation(user_listing, fairness_result, comparables)
+        # Fallback to detailed explanation if API fails
+        return get_detailed_fallback_explanation(user_listing, fairness_result, comparables)
         
     except Exception as e:
         print(f"Gemini API error: {e}")
-        return get_fallback_explanation(user_listing, fairness_result, comparables)
+        return get_detailed_fallback_explanation(user_listing, fairness_result, comparables)
+
+def get_detailed_fallback_explanation(user_listing, fairness_result, comparables):
+    """Generate detailed fallback explanation when Gemini API is unavailable"""
+    
+    # Calculate market statistics
+    prices = [comp['price'] for comp in comparables]
+    if prices:
+        avg_price = statistics.mean(prices)
+        median_price = statistics.median(prices)
+        price_range = f"${min(prices):.0f} - ${max(prices):.0f}"
+    else:
+        avg_price = user_listing['price']
+        median_price = user_listing['price']
+        price_range = f"${user_listing['price']:.0f}"
+    
+    # Determine market position
+    score = fairness_result.get('score', 0)
+    if score > 10:
+        market_position = "significantly above market"
+        strategy = "emphasize competitive alternatives and be prepared to justify current rate"
+    elif score > 5:
+        market_position = "above market average"
+        strategy = "highlight unique property features and negotiate for minor concessions"
+    elif score < -5:
+        market_position = "significantly below market"
+        strategy = "leverage your strong position to request rent reduction or additional amenities"
+    else:
+        market_position = "fair market value"
+        strategy = "focus on securing favorable lease terms and minor improvements"
+    
+    explanation = f"""
+    This {user_listing['bedrooms']}-bedroom, {user_listing['bathrooms']}-bathroom property in {user_listing['location']} 
+    is listed at ${user_listing['price']}/month, which is {market_position}. Based on our analysis of {len(comparables)} comparable listings 
+    in the area, the market average is ${avg_price:.0f} with properties ranging from {price_range}.
+    
+    The price per square foot of ${user_listing['price'] / user_listing['sqft'] if user_listing['sqft'] else 0:.2f} 
+    {'is competitive' if abs(score) <= 5 else 'offers good value' if score < -5 else 'requires market adjustment'}.
+    
+    {market_position.capitalize()} positioning provides you {strategy}.
+    """
+    
+    tips = f"""
+    • Research the {len(comparables)} comparable properties thoroughly to strengthen your negotiation position with specific market data points
+    • Document any unique features or recent upgrades to the property that justify your {market_position} pricing
+    • Consider the seasonal rental market in {user_listing['location']} - timing your negotiation during peak demand periods may yield better terms
+    • Prepare alternative proposals with different rent amounts or lease terms to demonstrate flexibility during negotiations
+    """
+    
+    return {
+        "explanation": explanation.strip(),
+        "negotiation_tips": tips.strip()
+    }
 
 def get_fallback_explanation(user_listing, fairness_result, comparables):
     """Fallback explanation when Gemini API is not available"""
