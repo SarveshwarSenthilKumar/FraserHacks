@@ -226,7 +226,12 @@ function animateSuccess() {
 }
 
 function displayResults(data) {
-    const { user_listing, fairness_result, comparables, ai_explanation, price_distribution } = data;
+    const { user_listing, fairness_result, comparables, ai_explanation, price_distribution, warnings, data_quality } = data;
+    
+    // Display warnings if any
+    if (warnings && warnings.length > 0) {
+        displayWarnings(warnings);
+    }
     
     // Update fairness indicator
     updateFairnessIndicator(fairness_result);
@@ -251,6 +256,34 @@ function displayResults(data) {
     
     // Scroll to results
     document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function displayWarnings(warnings) {
+    const warningsContainer = document.getElementById('warningsContainer');
+    if (!warningsContainer) {
+        // Create warnings container if it doesn't exist
+        const container = document.createElement('div');
+        container.id = 'warningsContainer';
+        container.className = 'mb-6';
+        container.innerHTML = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Data Quality Warnings
+                </h3>
+                <div id="warningsList" class="space-y-1"></div>
+            </div>
+        `;
+        document.getElementById('resultsSection').insertBefore(container, document.getElementById('resultsSection').firstChild);
+    }
+    
+    const warningsList = document.getElementById('warningsList');
+    warningsList.innerHTML = warnings.map(warning => `
+        <div class="flex items-start">
+            <i class="fas fa-exclamation-circle text-yellow-600 mt-0.5 mr-2 flex-shrink-0"></i>
+            <span class="text-sm text-yellow-800">${warning}</span>
+        </div>
+    `).join('');
 }
 
 function updateFairnessIndicator(fairness_result) {

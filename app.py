@@ -64,9 +64,130 @@ def generate_simple_coordinates(address, location):
         'lng': center[1] + lng_offset
     }
 
+def generate_simple_coordinates(address, location):
+    """Generate simple coordinates without any external dependencies"""
+    # Simple city center coordinates
+    city_centers = {
+        'mississauga': [43.5890, -79.6441],
+        'toronto': [43.6532, -79.3832],
+        'vancouver': [49.2827, -123.1207],
+        'montreal': [45.5017, -73.5673],
+        'calgary': [51.0447, -114.0719],
+        'ottawa': [45.4215, -75.6972],
+        'brampton': [43.7315, -79.7624],
+        'hamilton': [43.2557, -79.8711],
+        'london': [42.9837, -81.2497],
+        'kitchener': [43.4516, -80.4925],
+        'waterloo': [43.4643, -80.5204],
+        'halifax': [44.6476, -63.5752],
+        'winnipeg': [49.8951, -97.1384],
+        'edmonton': [53.5461, -113.4938],
+        'victoria': [48.4284, -123.3656],
+        'quebec city': [46.8139, -71.2080],
+        'saskatoon': [52.1579, -106.6702],
+        'regina': [50.4452, -104.6189],
+        'st. john\'s': [47.5615, -52.7126],
+        'barrie': [44.3894, -79.6903],
+        'guelph': [43.5448, -80.2482],
+        'kingston': [44.2312, -76.4860],
+        'windsor': [42.3149, -83.0703]
+    }
+    
+    # Get city center or default to Mississauga
+    center = city_centers.get(location.lower(), city_centers['mississauga'])
+    
+    # Add small random offset
+    import random
+    lat_offset = (random.random() - 0.5) * 0.1  # ±0.05 degrees
+    lng_offset = (random.random() - 0.5) * 0.1  # ±0.05 degrees
+    
+    return {
+        'lat': center[0] + lat_offset,
+        'lng': center[1] + lng_offset
+    }
+
 def geocode_address(address, location):
     """Simple coordinate generation without external APIs"""
     return generate_simple_coordinates(address, location)
+
+def validate_and_clean_rent_data(user_listing):
+    """Validate and clean rent data, return warnings if issues found"""
+    warnings = []
+    cleaned_listing = user_listing.copy()
+    
+    # Validate rent price
+    if user_listing['price'] <= 0:
+        warnings.append("Rent price must be greater than $0")
+        cleaned_listing['price'] = max(user_listing['price'], 1000)
+    
+    # Check for unrealistic rent prices
+    if user_listing['price'] > 10000:
+        warnings.append("Rent price seems unusually high (>$10,000)")
+    elif user_listing['price'] < 500:
+        warnings.append("Rent price seems unusually low (<$500)")
+    
+    # Validate square footage
+    if user_listing['sqft'] <= 0:
+        warnings.append("Square footage must be greater than 0")
+        cleaned_listing['sqft'] = 600  # Default minimum
+    
+    # Check for unrealistic square footage
+    if user_listing['sqft'] > 5000:
+        warnings.append("Square footage seems unusually large (>5000 sqft)")
+    elif user_listing['sqft'] < 300:
+        warnings.append("Square footage seems unusually small (<300 sqft)")
+    
+    # Validate bedroom count
+    if user_listing['bedrooms'] <= 0 or user_listing['bedrooms'] > 10:
+        warnings.append("Bedroom count seems unrealistic")
+        cleaned_listing['bedrooms'] = max(1, min(user_listing['bedrooms'], 5))
+    
+    # Validate bathroom count
+    if user_listing['bathrooms'] <= 0 or user_listing['bathrooms'] > 10:
+        warnings.append("Bathroom count seems unrealistic")
+        cleaned_listing['bathrooms'] = max(1, min(user_listing['bathrooms'], 5))
+    
+    # Check bedroom to bathroom ratio
+    if user_listing['bathrooms'] > user_listing['bedrooms'] + 2:
+        warnings.append("Bathroom count seems high compared to bedrooms")
+    
+    # Calculate price per square foot
+    price_per_sqft = cleaned_listing['price'] / cleaned_listing['sqft']
+    if price_per_sqft > 10:
+        warnings.append("Price per square foot seems very high")
+    elif price_per_sqft < 0.5:
+        warnings.append("Price per square foot seems very low")
+    
+    return cleaned_listing, warnings
+
+def validate_location(location):
+    """Validate if location is a known Canadian city/town"""
+    valid_locations = {
+        'mississauga', 'toronto', 'vancouver', 'montreal', 'calgary', 'ottawa',
+        'brampton', 'hamilton', 'london', 'kitchener', 'waterloo', 'halifax',
+        'winnipeg', 'edmonton', 'victoria', 'quebec city', 'saskatoon',
+        'regina', 'st. john\'s', 'barrie', 'guelph', 'kingston', 'windsor'
+    }
+    
+    location_lower = location.lower().strip()
+    return location_lower in valid_locations, location_lower
+
+def validate_address_format(address, location):
+    """Basic address format validation"""
+    if not address or len(address.strip()) < 5:
+        return False, "Address too short"
+    
+    # Check for basic address components
+    has_number = any(char.isdigit() for char in address)
+    has_street = any(word in address.lower() for word in ['st', 'street', 'ave', 'avenue', 'rd', 'road', 'dr', 'drive', 'blvd', 'boulevard'])
+    
+    if not has_number:
+        return False, "Address should include a street number"
+    
+    if not has_street:
+        return False, "Address should include a street type"
+    
+    return True, "Valid address format"
 
 def generate_comparable_listings_gemini(user_listing):
     """Generate comparable listings using Gemini API"""
@@ -325,8 +446,33 @@ def analyze_rent():
             "address": data.get('address', '')
         }
         
-        # Generate comparable listings using Gemini
-        gemini_listings = generate_comparable_listings_gemini(user_listing)
+        # Validate and clean data
+        cleaned_listing, data_warnings = validate_and_clean_rent_data(user_listing)
+        
+        # Validate location
+        is_valid_location, normalized_location = validate_location(cleaned_listing['location'])
+        location_warnings = []
+        
+        if not is_valid_location:
+            location_warnings.append(f"Location '{cleaned_listing['location']}' is not a recognized Canadian city/town")
+            # Default to Mississauga for analysis
+            cleaned_listing['location'] = 'Mississauga'
+            normalized_location = 'mississauga'
+        
+        # Validate address format
+        address_valid, address_message = validate_address_format(cleaned_listing['address'], cleaned_listing['location'])
+        address_warnings = []
+        
+        if not address_valid:
+            address_warnings.append(address_message)
+            # Generate a default address
+            cleaned_listing['address'] = f"123 Main St, {cleaned_listing['location'].title()}"
+        
+        # Combine all warnings
+        all_warnings = data_warnings + location_warnings + address_warnings
+        
+        # Generate comparable listings using Gemini with cleaned data
+        gemini_listings = generate_comparable_listings_gemini(cleaned_listing)
         
         # Add coordinates to all listings (simple and fast)
         for listing in gemini_listings:
@@ -335,24 +481,30 @@ def analyze_rent():
             listing['lng'] = coords['lng']
         
         # Find comparable listings from the generated data
-        comparables = find_comparables(user_listing, gemini_listings)
+        comparables = find_comparables(cleaned_listing, gemini_listings)
         
         # Calculate fairness score
-        fairness_result = calculate_fairness_score(user_listing["price"], comparables)
+        fairness_result = calculate_fairness_score(cleaned_listing["price"], comparables)
         
-        # Generate AI explanation
-        ai_explanation = generate_ai_explanation(user_listing, fairness_result, comparables)
+        # Generate AI explanation with cleaned data
+        ai_explanation = generate_ai_explanation(cleaned_listing, fairness_result, comparables)
         
-        # Prepare response
+        # Prepare response with warnings
         response = {
-            "user_listing": user_listing,
+            "user_listing": cleaned_listing,
             "fairness_result": fairness_result,
             "comparables": comparables[:10],  # Limit to top 10 for display
             "ai_explanation": ai_explanation,
             "price_distribution": {
-                "min": min(comp['price'] for comp in comparables) if comparables else user_listing["price"],
-                "max": max(comp['price'] for comp in comparables) if comparables else user_listing["price"],
+                "min": min(comp['price'] for comp in comparables) if comparables else cleaned_listing["price"],
+                "max": max(comp['price'] for comp in comparables) if comparables else cleaned_listing["price"],
                 "prices": [comp['price'] for comp in comparables]
+            },
+            "warnings": all_warnings,
+            "data_quality": {
+                "has_warnings": len(all_warnings) > 0,
+                "warning_count": len(all_warnings),
+                "data_cleaned": user_listing != cleaned_listing
             }
         }
         
